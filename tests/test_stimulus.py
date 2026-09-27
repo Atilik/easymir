@@ -373,6 +373,111 @@ def test_short_file_loudness_and_save(tmp_path):
     assert len(analysis) == 1
 
 
+# ── classifier-backed attributes (models faked) ─────────────
+
+@pytest.fixture
+def fake_models(monkeypatch):
+    """Stand-ins for the Essentia/CREPE models; records which ones ran."""
+    import rewardio.rewardio as rw
+    calls = []
+
+    def fake_classify_all(path):
+        calls.append("classify_all")
+        return {"genre": [("Rock---Classic Rock", 0.9), ("Pop", 0.05)],
+                "voice_instrumental": [("voice", 0.8), ("instrumental", 0.2)],
+                "mood": {"happy": 0.6, "sad": 0.1, "aggressive": 0.1, "relaxed": 0.2}}
+
+    def fake_crepe(path):
+        calls.append("crepe")
+        return np.array([0.0, 0.1]), np.array([220.0, 221.0]), np.array([0.9, 0.9])
+
+    def fake_key(path):
+        calls.append("key")
+        return "A", "minor", 0.77
+
+    monkeypatch.setattr(rw, "_classify_all", fake_classify_all)
+    monkeypatch.setattr(rw, "_detect_pitch_crepe", fake_crepe)
+    monkeypatch.setattr(rw, "_detect_key", fake_key)
+    return calls
+
+
+@pytest.fixture
+def missing_models(monkeypatch):
+    """Simulate a user who skipped `python download_models.py`
+    (key detection is algorithmic, so it still runs for real)."""
+    import rewardio.rewardio as rw
+
+    def missing(path):
+        raise FileNotFoundError("model file x.pb not installed — run: python download_models.py")
+
+    monkeypatch.setattr(rw, "_classify_all", missing)
+    monkeypatch.setattr(rw, "_detect_pitch_crepe", missing)
+
+
+def test_genre_property_runs_classify(sine_wav, fake_models):
+    # Regression: .genre / .genre_top5 called a method that didn't exist
+    s = Stimulus(sine_wav)
+    assert s.genre == "Rock---Classic Rock"
+    assert s.genre_top5[0] == ("Rock---Classic Rock", 0.9)
+
+
+def test_key_strength_property(sine_wav, fake_models):
+    # Regression: documented but missing
+    s = Stimulus(sine_wav)
+    assert s.key_strength == 0.77
+    assert (s.key, s.scale) == ("A", "minor")
+
+
+def test_pitch_arrays_run_crepe_only(sine_wav, fake_models):
+    # Regression: .pitch_time / .pitch_freq were documented but missing
+    s = Stimulus(sine_wav)
+    assert list(s.pitch_time) == [0.0, 0.1]
+    assert list(s.pitch_freq) == [220.0, 221.0]
+    assert list(s.pitch_conf) == [0.9, 0.9]
+    assert fake_models == ["crepe"]              # once, and no other models
+
+
+def test_declining_separation_returns_cleanly(sine_wav, inject_rhythm, monkeypatch, capsys):
+    # Regression: answering "n" to the Demucs prompt crashed with IndexError
+    prompts = []
+    monkeypatch.setattr("builtins.input", lambda *a: prompts.append(a) or "n")
+    s = Stimulus(sine_wav)
+    inject_rhythm(s)
+    s.separated_drums = None                     # force the prompt
+    assert s.syncopation_score() is None
+    assert s.detect_onsets() is None
+    assert len(prompts) == 2                     # one prompt per call, no re-prompts
+    assert s.toussaint_syncopation_score is None
+
+
+def test_classify_without_models_warns_and_continues(sine_wav, missing_models, capsys):
+    s = Stimulus(sine_wav)
+    s.classify()                                 # must not raise
+    assert "download_models.py" in capsys.readouterr().out
+    assert s._genre_predictions is None and s._pitch_freq is None
+    assert s._key is not None                    # key needs no model files
+
+
+def test_process_and_save_without_models_still_saves(sine_wav, tmp_path, inject_rhythm,
+                                                     missing_models):
+    # Regression: the crash came at the very end, after all the rhythm work,
+    # so nothing was saved
+    s = Stimulus(sine_wav)
+    inject_rhythm(s)
+    s.process_and_save(output_path=str(tmp_path))
+    header, rows = _read_saved_csv(str(tmp_path))
+    assert rows[0]["syncopation_score"] != "" and rows[0]["key"] != ""
+    assert "genre" not in header and "pitch_median_hz" not in header
+
+
+def test_save_timeseries_prefix(sine_wav, tmp_path):
+    s = Stimulus(sine_wav)
+    s._compute_spectral_if_needed()
+    s.save_timeseries(output_path=str(tmp_path), prefix="week1")
+    analysis = [d for d in os.listdir(tmp_path) if d.startswith("Analysis_")][0]
+    assert os.listdir(tmp_path / analysis) == ["week1_sine_440_timeseries.npz"]
+
+
 # ── repr ────────────────────────────────────────────────────
 
 def test_repr_formatted(sine_wav):

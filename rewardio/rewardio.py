@@ -221,7 +221,8 @@ class Stimulus:
         """
         if confirm and self.separated_drums is None:
             ans = input(
-                "!!! This requires Demucs source separation (~5-10s per song depending on GPU).\n"
+                "!!! This requires Demucs drum separation — on a CPU it takes roughly\n"
+                "    as long as the song itself.\n"
                 "Proceed? [Y/n] "
             ).strip().lower()
             if ans in ('n', 'no'):
@@ -250,11 +251,14 @@ class Stimulus:
             delta: Detection threshold (default 0.25).
             
         Returns:
-            onset_times: Array of onset times in seconds.
+            onset_times: Array of onset times in seconds, or None if drum
+            separation was declined.
         """
         if y is None:
             if self.separated_drums is None:
                 self.separate()
+                if self.separated_drums is None:    # separation declined
+                    return None
 
             drums_y = self.separated_drums
             if drums_y.ndim == 2:
@@ -282,6 +286,8 @@ class Stimulus:
         Detect onsets using Path 2 logic.
         """
         onsets = self.onset_detection(y=y, hop_length=hop_length, delta=delta)
+        if onsets is None:                          # separation declined
+            return None
         # Auto-calculate syncopation score since we have onsets
         self.syncopation_score()
         print(f"Detected {len(onsets)} onsets.")
@@ -294,9 +300,14 @@ class Stimulus:
             meter: If True, uses detected meter and beat positions for
                    proper bar alignment.
                    If False (default), assumes 4/4 with no bar alignment.
+
+        Returns:
+            Score (0–100), or None if drum separation was declined.
         """
         if self.separated_drums is None:
             self.separate()
+            if self.separated_drums is None:        # separation declined
+                return None
 
         if meter:
             # Meter-aware: use beat_positions for proper bar alignment
@@ -327,37 +338,51 @@ class Stimulus:
     def genre(self):
         """Top predicted genre (e.g. 'Electronic---House')."""
         if self._genre_predictions is None:
-            self.classify_genre()
+            self.classify()
         return self._genre_predictions[0][0] if self._genre_predictions else None
 
     @property
     def genre_top5(self):
         """Top 5 genre predictions as [(label, confidence), ...]."""
         if self._genre_predictions is None:
-            self.classify_genre()
+            self.classify()
         return self._genre_predictions
+
+    def _classify_genre_voice_mood(self):
+        """
+        Essentia genre / voice-instrumental / mood on shared embeddings.
+        Warns and skips (instead of crashing a whole batch) when the optional
+        models are not installed or the audio is too short to classify.
+        """
+        try:
+            results = _classify_all(self.audio_file_path)
+        except (FileNotFoundError, ValueError) as e:
+            print(f"  ⚠️  Skipped genre/voice/mood — {e}")
+            return
+        self._genre_predictions = results["genre"]
+        self._voice_instrumental = results["voice_instrumental"]
+        self._mood = results["mood"]
 
     def classify(self):
         """
         Run ALL Essentia classifiers at once (genre,
         voice/instrumental, mood) on shared embeddings.
         Also runs CREPE pitch detection and key/scale detection.
+
+        Model-based parts are skipped with a warning when the optional
+        models are not installed (python download_models.py).
         """
         print(f"Classifying {self.audio_file_name}...\n")
-        results = _classify_all(self.audio_file_path)
-
-        # Store results
-        self._genre_predictions = results["genre"]
-        self._voice_instrumental = results["voice_instrumental"]
-        self._mood = results["mood"]
+        self._classify_genre_voice_mood()
 
         # Pitch (separate model)
         print("  Running CREPE pitch detection...")
-        self._pitch_time, self._pitch_freq, self._pitch_conf = _detect_pitch_crepe(
-            self.audio_file_path
-        )
+        try:
+            self._pitch_if_needed()
+        except FileNotFoundError as e:
+            print(f"  ⚠️  Skipped pitch — {e}")
 
-        # Key/scale detection
+        # Key/scale detection (algorithmic — needs no model files)
         print("  Detecting key/scale...")
         self._key, self._scale, self._key_strength = _detect_key(
             self.audio_file_path
@@ -368,26 +393,30 @@ class Stimulus:
         print(f"  {'─' * 20} {'─' * 35}")
 
         # Genre
-        top_genre = self._genre_predictions[0]
-        print(f"  {'Genre':<20s} {top_genre[0]}  ({top_genre[1]*100:.1f}%)")
+        if self._genre_predictions:
+            top_genre = self._genre_predictions[0]
+            print(f"  {'Genre':<20s} {top_genre[0]}  ({top_genre[1]*100:.1f}%)")
 
         # Voice/Instrumental
-        top_vi = self._voice_instrumental[0]
-        print(f"  {'Vocal':<20s} {top_vi[0]}")
+        if self._voice_instrumental:
+            top_vi = self._voice_instrumental[0]
+            print(f"  {'Vocal':<20s} {top_vi[0]}")
 
         # Key
         print(f"  {'Key':<20s} {self._key} {self._scale}  ({self._key_strength*100:.0f}%)")
 
         # Mood — just top mood
-        top_mood = max(self._mood, key=self._mood.get)
-        print(f"  {'Mood':<20s} {top_mood} ({self._mood[top_mood]*100:.0f}%)")
+        if self._mood:
+            top_mood = max(self._mood, key=self._mood.get)
+            print(f"  {'Mood':<20s} {top_mood} ({self._mood[top_mood]*100:.0f}%)")
 
         # Pitch
-        voiced = self._pitch_freq[self._pitch_conf > 0.5]
-        if len(voiced) > 0:
-            print(f"  {'Pitch':<20s} {float(np.median(voiced)):.1f} Hz")
-        else:
-            print(f"  {'Pitch':<20s} (no voiced frames)")
+        if self._pitch_freq is not None:
+            voiced = self._pitch_freq[self._pitch_conf > 0.5]
+            if len(voiced) > 0:
+                print(f"  {'Pitch':<20s} {float(np.median(voiced)):.1f} Hz")
+            else:
+                print(f"  {'Pitch':<20s} (no voiced frames)")
         print()
 
     # Voice / Instrumental
@@ -421,11 +450,41 @@ class Stimulus:
             self.classify()
         return self._scale
 
+    @property
+    def key_strength(self):
+        """Key detection confidence [0, 1]."""
+        if self._key_strength is None:
+            self.classify()
+        return self._key_strength
+
     # Pitch (CREPE)
+    def _pitch_if_needed(self):
+        """Run CREPE pitch tracking once (only CREPE, not the other classifiers)."""
+        if self._pitch_freq is None:
+            self._pitch_time, self._pitch_freq, self._pitch_conf = \
+                _detect_pitch_crepe(self.audio_file_path)
+
+    @property
+    def pitch_time(self):
+        """CREPE frame times in seconds."""
+        self._pitch_if_needed()
+        return self._pitch_time
+
+    @property
+    def pitch_freq(self):
+        """CREPE pitch estimate per frame in Hz."""
+        self._pitch_if_needed()
+        return self._pitch_freq
+
+    @property
+    def pitch_conf(self):
+        """CREPE confidence per frame [0, 1]."""
+        self._pitch_if_needed()
+        return self._pitch_conf
+
     def _voiced_pitch(self):
         """Return voiced pitch frequencies (confidence > 0.5)."""
-        if self._pitch_freq is None:
-            self.classify()
+        self._pitch_if_needed()
         return self._pitch_freq[self._pitch_conf > 0.5]
 
     @property
@@ -449,15 +508,13 @@ class Stimulus:
     @property
     def pitch_conf_mean(self):
         """Mean CREPE pitch confidence [0, 1]."""
-        if self._pitch_conf is None:
-            self.classify()
+        self._pitch_if_needed()
         return float(np.mean(self._pitch_conf))
 
     @property
     def pitch_conf_std(self):
         """Std deviation of CREPE pitch confidence."""
-        if self._pitch_conf is None:
-            self.classify()
+        self._pitch_if_needed()
         return float(np.std(self._pitch_conf))
 
     # Beat IOI
@@ -648,7 +705,7 @@ class Stimulus:
         row = self._collect_attrs()
         write_to_csv([row], output_path=output_path)
 
-    def save_timeseries(self, output_path=None):
+    def save_timeseries(self, output_path=None, prefix=None):
         """
         Save all computed time series as a .npz archive.
 
@@ -659,6 +716,9 @@ class Stimulus:
         ----------
         output_path : str or None
             Parent directory for the Analysis folder.
+        prefix : str or None
+            Optional filename prefix (e.g. the session name), so the same
+            song exported from several sessions doesn't overwrite itself.
         """
         if output_path is None:
             output_path = os.path.dirname(os.path.abspath(__file__))
@@ -669,6 +729,8 @@ class Stimulus:
         os.makedirs(folder_path, exist_ok=True)
 
         base = os.path.splitext(self.audio_file_name)[0]
+        if prefix:
+            base = f"{prefix}_{base}"
         npz_path = os.path.join(folder_path, f"{base}_timeseries.npz")
 
         arrays = {}
@@ -731,13 +793,12 @@ class Stimulus:
                 self.syncopation_score()
             self.syncopation_score(meter=True)
         if genre:
-            results = _classify_all(self.audio_file_path)
-            self._genre_predictions = results["genre"]
-            self._voice_instrumental = results["voice_instrumental"]
-            self._mood = results["mood"]
+            self._classify_genre_voice_mood()   # warns & skips if models missing
         if pitch:
-            self._pitch_time, self._pitch_freq, self._pitch_conf = \
-                _detect_pitch_crepe(self.audio_file_path)
+            try:
+                self._pitch_if_needed()
+            except FileNotFoundError as e:
+                print(f"  ⚠️  Skipped pitch — {e}")
         if key:
             self._key, self._scale, self._key_strength = \
                 _detect_key(self.audio_file_path)
@@ -806,6 +867,8 @@ class Stimulus:
         """Sonify beats + onsets (legacy - use .play() instead)."""
         if self.onset_times is None:
             self.detect_onsets()
+            if self.onset_times is None:            # separation declined
+                return
 
         _sonify_beats_and_onsets(self.y, self.sr, self.beat_times, self.onset_times,
                                  title=f"Beats + Onsets - {self.audio_file_name}",
@@ -882,6 +945,8 @@ class Session:
             
         # Iterate over files in the directory
         for fname in sorted(os.listdir(folder_path)):
+             if _is_hidden(fname):
+                 continue    # .DS_Store, macOS '._' resource files, ...
              ext = os.path.splitext(fname)[1].lower()
              if ext in ('.wav', '.mp3', '.flac', '.aiff', '.ogg', '.m4a'):
                  fpath = os.path.join(folder_path, fname)
@@ -907,7 +972,7 @@ class Session:
             if need_sep:
                 ans = input(
                     f"⚠️  {len(need_sep)} song(s) need Demucs drum separation for syncopation scoring.\n"
-                    f"    This takes up to 1 minute per song depending on your GPU.\n"
+                    f"    On a CPU this takes roughly as long as each song itself.\n"
                     f"    Proceed? [Y/n] "
                 ).strip().lower()
                 if ans in ('n', 'no'):
@@ -965,6 +1030,11 @@ class Session:
         """
         rows = [s._collect_attrs() for s in self.items]
         write_to_csv(rows, output_path=output_path)
+
+    def save_timeseries(self, output_path=None):
+        """Save each song's computed time series as a .npz file."""
+        for s in self.items:
+            s.save_timeseries(output_path=output_path)
 
     def process_and_save(self, output_path=None, index=None, timeseries=False):
         """
@@ -1127,6 +1197,8 @@ class Participant:
         print(f"Loading participant from: {folder_path}...")
 
         for name in sorted(os.listdir(folder_path)):
+            if _is_hidden(name):
+                continue    # .ipynb_checkpoints, __MACOSX, ...
             sub_path = os.path.join(folder_path, name)
             if os.path.isdir(sub_path):
                 try:
@@ -1206,7 +1278,7 @@ class Participant:
                 rows.append(row)
             if timeseries:
                 for s in session.items:
-                    s.save_timeseries(output_path=output_path)
+                    s.save_timeseries(output_path=output_path, prefix=session_name)
             return write_to_csv(rows, output_path=output_path)
         else:
             print(f"Processing {self.n_sessions} sessions...")
@@ -1220,7 +1292,7 @@ class Participant:
             if all_need_sep:
                 ans = input(
                     f"\n⚠️  {len(all_need_sep)} song(s) across all sessions need Demucs drum separation for syncopation scoring.\n"
-                    f"    This takes ~5-10s per song depending on your GPU.\n"
+                    f"    On a CPU this takes roughly as long as each song itself.\n"
                     f"    Proceed? [Y/n] "
                 ).strip().lower()
                 if ans in ('n', 'no'):
@@ -1238,8 +1310,9 @@ class Participant:
             result = self.save(output_path=output_path)
             if timeseries:
                 for session in self.sessions:
+                    session_name = os.path.basename(session.folder_path)
                     for s in session.items:
-                        s.save_timeseries(output_path=output_path)
+                        s.save_timeseries(output_path=output_path, prefix=session_name)
             return result
 
     def partial_process_save(self, output_path=None, rhythm=False,
@@ -1266,8 +1339,9 @@ class Participant:
         result = self.save(output_path=output_path)
         if timeseries:
             for session in self.sessions:
+                session_name = os.path.basename(session.folder_path)
                 for s in session.items:
-                    s.save_timeseries(output_path=output_path)
+                    s.save_timeseries(output_path=output_path, prefix=session_name)
         return result
 
     def __len__(self):
@@ -1343,12 +1417,18 @@ class Participant:
         _participant_print(self)
 
 
-# _folder_has_subdirs — helper for rewardio()
+# Folder helpers — used by Session, Participant and rewardio()
+
+def _is_hidden(name):
+    """Hidden/system entries to ignore: .DS_Store, .ipynb_checkpoints,
+    macOS '._' resource files, and __MACOSX folders from zip archives."""
+    return name.startswith(".") or name == "__MACOSX"
+
 
 def _folder_has_subdirs(path):
-    """Check if a directory contains at least one sub-directory."""
+    """Check if a directory contains at least one (non-hidden) sub-directory."""
     for name in os.listdir(path):
-        if os.path.isdir(os.path.join(path, name)):
+        if not _is_hidden(name) and os.path.isdir(os.path.join(path, name)):
             return True
     return False
 
@@ -1373,7 +1453,8 @@ def rewardio(path):
         if _folder_has_subdirs(path):
             audio_exts = ('.wav', '.mp3', '.flac', '.aiff', '.ogg', '.m4a')
             loose = [f for f in os.listdir(path)
-                     if os.path.splitext(f)[1].lower() in audio_exts]
+                     if not _is_hidden(f)
+                     and os.path.splitext(f)[1].lower() in audio_exts]
             if loose:
                 print(
                     f"⚠️  Ignoring {len(loose)} audio file(s) at the top level of "

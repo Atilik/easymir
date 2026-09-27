@@ -58,6 +58,26 @@ def test_write_to_csv_filename_has_seconds(tmp_path):
     assert base.startswith("rewardio_") and base.endswith(".csv")
 
 
+def test_write_to_csv_never_overwrites_same_second(tmp_path, monkeypatch):
+    # Regression: two exports within one second silently overwrote each other
+    import rewardio.core as core
+    from datetime import datetime as real_datetime
+    frozen = real_datetime(2026, 9, 27, 14, 48, 27)
+
+    class FrozenDatetime:
+        @staticmethod
+        def now():
+            return frozen
+
+    monkeypatch.setattr(core, "datetime", FrozenDatetime)
+    p1 = write_to_csv([{"song": "first"}], output_path=str(tmp_path))
+    p2 = write_to_csv([{"song": "second"}], output_path=str(tmp_path))
+    assert os.path.basename(p1) == "rewardio_14-48-27.csv"
+    assert os.path.basename(p2) == "rewardio_14-48-27_2.csv"
+    assert open(p1).read().split()[1] == "first"
+    assert open(p2).read().split()[1] == "second"
+
+
 def test_write_to_csv_sparse_rows_union_header(tmp_path):
     path = write_to_csv([{"a": 1, "b": 2}, {"a": 3, "c": 4}], output_path=str(tmp_path))
     with open(path) as f:

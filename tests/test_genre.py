@@ -106,6 +106,26 @@ def test_classify_all_shares_embeddings(long_wav):
     assert set(results.keys()) == {"genre", "voice_instrumental", "mood"}
 
 
+@pytest.mark.skipif(not MODELS_PRESENT, reason="rewardio/models/*.pb not installed")
+def test_stimulus_genre_property_real(long_wav):
+    # Regression: Stimulus.genre crashed on first access (AttributeError)
+    from rewardio.rewardio import Stimulus
+    s = Stimulus(long_wav)
+    assert isinstance(s.genre, str)
+    assert len(s.genre_top5) == 5
+
+
+@pytest.mark.skipif(not MODELS_PRESENT, reason="rewardio/models/*.pb not installed")
+def test_stimulus_classify_short_audio_skips_genre(sine_wav, capsys):
+    # < ~2.1 s can't be genre-classified: warn and keep going (key still runs)
+    from rewardio.rewardio import Stimulus
+    s = Stimulus(sine_wav)
+    s.classify()
+    assert "too short" in capsys.readouterr().out
+    assert s._genre_predictions is None
+    assert s._key is not None
+
+
 @pytest.mark.skipif(not CREPE_PRESENT, reason="crepe-medium-1.pb not installed")
 def test_detect_pitch_crepe(sine_wav):
     from rewardio.genre import detect_pitch_crepe

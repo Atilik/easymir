@@ -166,6 +166,61 @@ def test_participant_process_and_save_positional_path(participant_folder, tmp_pa
     assert [r["session"] for r in rows] == ["sess_a", "sess_b"]
 
 
+# ── timeseries export ───────────────────────────────────────
+
+def test_session_save_timeseries(session_folder, tmp_path):
+    # Regression: listed in session.help() but did not exist
+    sess = Session(session_folder)
+    for s in sess.items:
+        s._compute_spectral_if_needed()
+    sess.save_timeseries(output_path=str(tmp_path))
+    analysis = [d for d in os.listdir(tmp_path) if d.startswith("Analysis_")][0]
+    assert sorted(os.listdir(tmp_path / analysis)) == [
+        "01_alpha_timeseries.npz", "02_beta_timeseries.npz"]
+
+
+def test_participant_timeseries_keeps_same_song_from_each_session(tmp_path, sine_wav):
+    # Regression: the same song in two sessions was exported to ONE .npz
+    root = tmp_path / "participant"
+    for sess in ("week1", "week2"):
+        (root / sess).mkdir(parents=True)
+        shutil.copy(sine_wav, root / sess / "song.wav")
+    out = tmp_path / "out"
+    Participant(str(root)).partial_process_save(output_path=str(out), spectral=True,
+                                                timeseries=True)
+    analysis = [d for d in os.listdir(out) if d.startswith("Analysis_")][0]
+    npz = sorted(f for f in os.listdir(out / analysis) if f.endswith(".npz"))
+    assert npz == ["week1_song_timeseries.npz", "week2_song_timeseries.npz"]
+
+
+# ── hidden / system folders ─────────────────────────────────
+
+@pytest.mark.parametrize("junk", [".ipynb_checkpoints", "__MACOSX"])
+def test_hidden_subfolder_does_not_make_participant(tmp_path, sine_wav, junk):
+    # Regression: a session folder containing e.g. .ipynb_checkpoints/ was
+    # loaded as a participant, and its songs were ignored
+    shutil.copy(sine_wav, tmp_path / "song.wav")
+    (tmp_path / junk).mkdir()
+    obj = rewardio(str(tmp_path))
+    assert isinstance(obj, Session) and len(obj) == 1
+
+
+def test_participant_ignores_hidden_folders(participant_folder):
+    os.makedirs(os.path.join(participant_folder, ".ipynb_checkpoints"))
+    os.makedirs(os.path.join(participant_folder, "__MACOSX"))
+    p = Participant(participant_folder)
+    assert [os.path.basename(s.folder_path) for s in p.sessions] == ["sess_a", "sess_b"]
+
+
+def test_session_ignores_macos_resource_files(session_folder, capsys):
+    # '._song.wav' AppleDouble files (external drives, zips) are skipped silently
+    with open(os.path.join(session_folder, "._01_alpha.wav"), "wb") as f:
+        f.write(b"\x00\x05\x16\x07 not audio")
+    sess = Session(session_folder)
+    assert len(sess) == 2
+    assert "[Skipped]" not in capsys.readouterr().out
+
+
 # ── Session / Participant averages ──────────────────────────
 
 def test_session_average_fluctuation_and_irregularity(session_folder):

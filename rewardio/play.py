@@ -876,6 +876,9 @@ def play_interactive(stimulus, xlim=None, ylim=None):
 
         def _prepare():
             stimulus.detect_onsets()  # may run Demucs (+ terminal prompt)
+            if stimulus.onset_times is None:
+                # Declined in the terminal — stop here instead of re-prompting
+                raise RuntimeError("drum separation was declined")
             _build_onset_track()
 
         _start_toggle_worker("onsets", _prepare)

@@ -55,8 +55,13 @@ def write_to_csv(rows, output_path=None):
     folder_path = os.path.join(output_path, folder_name)
     os.makedirs(folder_path, exist_ok=True)
 
-    file_name = now.strftime("rewardio_%H-%M-%S.csv")
-    csv_path = os.path.join(folder_path, file_name)
+    base = now.strftime("rewardio_%H-%M-%S")
+    csv_path = os.path.join(folder_path, f"{base}.csv")
+    # Never overwrite an earlier export from the same second
+    n = 2
+    while os.path.exists(csv_path):
+        csv_path = os.path.join(folder_path, f"{base}_{n}.csv")
+        n += 1
 
     # Collect all unique keys across rows to handle sparse data
     all_keys = []
@@ -94,10 +99,14 @@ def stimulus_help(stimulus):
     print("  .loudness_rms_db           - RMS level [−∞ to 0] dBFS")
     print("  .rms                       - Mean RMS energy [0–1]")
     print("  .BPM                       - Detected tempo [~30–300] BPM")
+    print("  .meter                     - Beats per bar (2, 3 or 4)")
     print("  .beat_times                - numpy array of detected beats (seconds)")
     print("  .onset_times               - numpy array of detected onsets (seconds)")
-    print("  .toussaint_sync_score      - Toussaint syncopation score [0–100]")
+    print("  .toussaint_syncopation_score       - Toussaint syncopation score [0–100]")
+    print("  .toussaint_syncopation_score_meter - Meter-aware syncopation score [0–100]")
     print("  .separated_drums           - Only drums audio")
+    print("  .key / .scale              - Musical key and scale (major/minor)")
+    print("  .key_strength              - Key detection confidence [0–1]")
     print("  .genre                     - Top predicted genre (Discogs400)")
     print("  .genre_top5                - Top 5 genre predictions w/ confidence [0–1]")
     print("  .voice_instrumental        - 'voice' or 'instrumental'")
@@ -105,6 +114,7 @@ def stimulus_help(stimulus):
     print("  .pitch                     - Median pitch (Hz, CREPE, voiced frames)")
     print("  .pitch_mean/std            - Mean/std pitch (Hz, voiced frames)")
     print("  .pitch_conf_mean/std       - CREPE pitch confidence [0–1]")
+    print("  .pitch_time/freq/conf      - CREPE per-frame arrays (s, Hz, [0–1])")
     print("  .beat_ioi_mean/std         - Inter-beat interval (seconds)")
     print("  .onset_ioi_mean/std        - Inter-onset interval (seconds)")
     print("  .fluctuation               - Rhythmic periodicity [0–∞] (Pampalk, 2002)")

@@ -64,8 +64,8 @@ def _get_embedding_model():
 
     if not os.path.isfile(_EFFNET_PATH):
         raise FileNotFoundError(
-            f"Embedding model not found: {_EFFNET_PATH}\n"
-            f"Run the download script or see genre.py for instructions."
+            f"model file {os.path.basename(_EFFNET_PATH)} not installed — "
+            f"run: python download_models.py"
         )
 
     
@@ -88,7 +88,9 @@ def _get_head_model(name):
     json_path = os.path.join(_MODELS_DIR, f"{base}.json")
 
     if not os.path.isfile(pb_path):
-        raise FileNotFoundError(f"Model not found: {pb_path}")
+        raise FileNotFoundError(
+            f"model file {base}.pb not installed — run: python download_models.py"
+        )
 
     # genre_discogs400 uses different node names than the others
     if name == "genre":
@@ -223,7 +225,10 @@ def detect_pitch_crepe(audio_file_path):
 
     if _crepe_model is None:
         if not os.path.isfile(_CREPE_PATH):
-            raise FileNotFoundError(f"CREPE model not found: {_CREPE_PATH}")
+            raise FileNotFoundError(
+                f"model file {os.path.basename(_CREPE_PATH)} not installed — "
+                f"run: python download_models.py"
+            )
         
         _crepe_model = PitchCREPE(graphFilename=_CREPE_PATH)
 
