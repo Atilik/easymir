@@ -16,13 +16,26 @@ A simple, interactive command-line Python tool for music information retrieval (
 
 ## 🛠️ How to Setup Rewardio
 
+**Supported platforms:** macOS (tested). Linux is expected to work but is not yet
+tested — install the PortAudio system library first (`sudo apt install libportaudio2`),
+which audio playback needs. Windows is not supported natively (use WSL2).
+
 Requirements: [conda](https://docs.conda.io/en/latest/miniconda.html), git, and
 (macOS only) the Xcode command-line tools — install with `xcode-select --install` —
 because one dependency (madmom) is compiled from source.
 
+**Installed rewardio before?** Start fresh — `conda env create` will not overwrite an
+existing environment:
+
+```bash
+conda deactivate
+conda env remove -n rewardio
+# then re-clone (step 1 below), or run `git pull` inside your existing rewardio folder
+```
+
 ```bash
 # 1. Clone the repo
-git clone git@github.com:Atilik/rewardio.git
+git clone https://github.com/Atilik/rewardio.git
 cd rewardio
 
 # 2. Create the conda environment (installs everything; takes a few minutes)
@@ -34,15 +47,15 @@ conda activate rewardio
 # 4. Download the classifier models (~45 MB — enables genre/mood/pitch features)
 python download_models.py
 
-# 5. Verify the install — should end with "154 passed" and no failures
+# 5. Verify the install — should finish with no failures (e.g. "154 passed, 3 skipped")
 python run_tests.py
 
 # 6. Run rewardio
-cd rewardio
-python rewardio.py /path/to/audio/
+python -m rewardio /path/to/audio/
 ```
 
 **Notes**
+- Run all commands from the repo folder (the one containing this `README.md`).
 - Step 4 is optional: without the models everything works except genre, mood,
   voice/instrumental, and CREPE pitch (the test suite then reports a few skips
   instead of failures). Re-running the script is safe — it skips existing files.
@@ -54,23 +67,27 @@ python rewardio.py /path/to/audio/
 
 ## 🚀 Getting Started
 
-Open the terminal from your macos.
-
-Launch the tool by passing the path to an audio file, a session folder, or a participant folder.
+Open a terminal, activate the environment, and go to the repo folder (the one containing
+this `README.md`). Then launch the tool with the path to an audio file, a session folder,
+or a participant folder:
 
 ```bash
-cd rewardio/
-# Load a single song:
-python rewardio.py /path/to/song.wav
+conda activate rewardio
+cd /path/to/rewardio           # the repo folder
 
-# Load a single session (folder of audio files):
-python rewardio.py /path/to/session_folder/
+# Load a single song:
+python -m rewardio /path/to/song.wav
+
+# Load a session (folder of audio files):
+python -m rewardio /path/to/session_folder/
 
 # Load a participant (folder containing session folders):
-python rewardio.py /path/to/participant_folder/
+python -m rewardio /path/to/participant_folder/
 ```
 
-This drops you into an interactive Python shell pre-loaded with your data.
+This drops you into an interactive Python shell pre-loaded with your data. Leave it with `exit()` or Ctrl-D.
+
+Prefer scripts or notebooks? See [DOCUMENTATION.md](DOCUMENTATION.md) — `from rewardio import Stimulus, Session, Participant`.
 
 ---
 
@@ -79,10 +96,10 @@ This drops you into an interactive Python shell pre-loaded with your data.
 `rewardio` structures your data into three levels depending on the folder you pass:
 
 1. **Participant**: A folder containing multiple *Session* folders.
-2. **Stimuli** (Session): A folder containing multiple *Stimulus* audio files.
+2. **Session**: A folder containing multiple *Stimulus* audio files.
 3. **Stimulus**: A single audio file (e.g., a `.wav` or `.mp3`).
 
-When you load a folder, `rewardio` automatically gives you variables (`participant`, `stimuli`, `stimulus`) to interact with your data immediately.
+When you load a folder, `rewardio` automatically gives you variables (`participant`, `session`, `stimulus`) to interact with your data immediately.
 
 ---
 
@@ -91,27 +108,27 @@ When you load a folder, `rewardio` automatically gives you variables (`participa
 Type the following commands directly into the terminal once `rewardio` is launched:
 
 ### Navigating Data
-- `participant(1)` — Focus on the 1st session. Updates the `stimuli` variable.
+- `participant(1)` — Focus on the 1st session. Updates the `session` and `stimulus` variables.
 - `participant("baseline")` — Focus on a session containing "baseline" in its folder name.
-- `stimuli(3)` — Focus on the 3rd song in the current session. Updates the `stimulus` variable.
-- `stimuli("beatles")` — Focus on a song containing "beatles" in its filename.
+- `session(3)` — Focus on the 3rd song in the current session. Updates the `stimulus` variable.
+- `session("beatles")` — Focus on a song containing "beatles" in its filename.
 
 ### Viewing Info
 - `stimulus.help()` — List all available attributes and methods for the current song.
-- `stimuli.help()` — List all available methods for the session.
+- `session.help()` — List all available methods for the session.
 - `participant.help()` — List all available methods for the participant.
 - `stimulus.print()` — Print a summary of the current song (loudness, BPM, syncopation, key, etc.).
-- `stimuli.print()` — Print summary metrics averaged across the whole session.
-- `participant.print()` — Print the current attributes and sessions loaded.
+- `session.print()` — List the songs in the current session.
+- `participant.print()` — List the sessions loaded for this participant.
 
 ### Interactive Player & Viz
 - **`stimulus.play()`**
   Launch the interactive unified player. You can switch between Waveform, Mel, Log, Linear, and Pitch views. Click **Beats** or **Onsets** to visualize and sonify rhythm markers directly over the audio playback.
-- `stimulus.plot()` — Quick static waveform/spectrogram.
-- `stimuli.plot_boxplots()` — Boxplots showing metric distributions.
+- `stimulus.plot()` — Spectrogram window (`scale='mel'` by default, or `'linear'` / `'log'`).
+- `session.boxplot()` — Boxplots of BPM, LUFS, and syncopation across the session.
 
 ### Getting Metrics
-Access properties on-the-fly. If a metric hasn't been computed yet, `rewardio` computes it instantly.
+Access properties on-the-fly. If a metric hasn't been computed yet, `rewardio` computes it on first access (model-based metrics take a few seconds).
 ```python
 >>> stimulus.bpm
 120.5
@@ -119,19 +136,21 @@ Access properties on-the-fly. If a metric hasn't been computed yet, `rewardio` c
 'C#'
 >>> stimulus.scale
 'minor'
->>> stimulus.toussaint_syncopation_score
-0.42
+>>> stimulus.syncopation_score()   # 0–100; separates the drums first if needed
+31
 ```
 
 ### Exporting Data
 - `stimulus.process_and_save("output_folder")`
-- Computes ALL available metrics (beats, syncopation, loudness, genre, mood, key, etc.) for the specific song and saves them to a CSV file.
-- `stimuli.process_and_save("output_folder")`
-  Computes ALL available metrics (beats, syncopation, loudness, genre, mood, key, etc.) for every song in the session and saves them to a CSV file.
+  Computes ALL available metrics (beats, syncopation, loudness, genre, mood, key, etc.) for the specific song and saves them to a CSV file.
+- `session.process_and_save("output_folder")`
+  Computes ALL available metrics for every song in the session and saves them to a CSV file.
 - `participant.process_and_save("output_folder")`
   Does the same, but loops through every session folder, adding a `session` column to the final CSV.
 - `stimulus.partial_process_save(rhythm=True, pitch=True)`
   Computes only the selected feature groups (`rhythm`, `syncopation`, `genre`, `pitch`, `key`, `spectral`) instead of everything. `rhythm` is beats/BPM only (fast); `syncopation` runs Demucs separation + scoring (slow). Available on `session` and `participant` too.
+
+Results are written to `output_folder/Analysis_DD-MM-YYYY/rewardio_HH-MM-SS.csv` (the exact path is printed after saving).
 
 ### Aggregate Metrics
 - `session.average_fluctuation` / `session.average_irregularity` — Mean fluctuation / spectral irregularity across the session's songs.
@@ -142,11 +161,9 @@ Access properties on-the-fly. If a metric hasn't been computed yet, `rewardio` c
 ## 🛠 Advanced Features
 
 ### Separation & Syncopation
-Syncopation requires isolating the drums. `rewardio` will prompt you to run Demucs separation the first time you ask for a syncopation score.
+Syncopation requires isolating the drums with Demucs. The first time you ask for a syncopation score, `rewardio` asks for confirmation (`Proceed? [Y/n]`) — on a CPU, separation takes roughly as long as the song itself.
 ```python
 >>> stimulus.syncopation_score()
-Checking separation...
-⚠️  Do you want to run Demucs drum separation on this track? (y/n)
 ```
 
 ### Pitch Tracking

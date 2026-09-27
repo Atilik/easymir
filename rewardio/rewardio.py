@@ -966,20 +966,23 @@ class Session:
         rows = [s._collect_attrs() for s in self.items]
         write_to_csv(rows, output_path=output_path)
 
-    def process_and_save(self, index=None, output_path=None, timeseries=False):
+    def process_and_save(self, output_path=None, index=None, timeseries=False):
         """
         Compute ALL metrics, then save to CSV.
 
         Parameters
         ----------
+        output_path : str or None
+            Folder to write the Analysis directory in. Defaults to scripts dir.
         index : int or None
             If given (1-based), process only that stimulus.
             If None, process all items.
-        output_path : str or None
-            Folder to write the Analysis directory in. Defaults to scripts dir.
         timeseries : bool
             If True, also save time series as .npz files.
         """
+        if isinstance(output_path, int) and not isinstance(output_path, bool):
+            # Backward compatibility: the old signature was (index, output_path)
+            output_path, index = index, output_path
         if index is not None:
             item = self[index]  # 1-based via __getitem__
             print(f"Processing stimulus {index}: {item.audio_file_name}...")
@@ -1170,20 +1173,23 @@ class Participant:
                 rows.append({})  # Blank row between sessions
         return write_to_csv(rows, output_path=output_path)
 
-    def process_and_save(self, index=None, output_path=None, timeseries=False):
+    def process_and_save(self, output_path=None, index=None, timeseries=False):
         """
         Compute ALL metrics, then save to CSV.
 
         Parameters
         ----------
+        output_path : str or None
+            Folder to write the Analysis directory in.
         index : int or None
             If given (1-based), process only that session.
             If None, process all sessions.
-        output_path : str or None
-            Folder to write the Analysis directory in.
         timeseries : bool
             If True, also save time series as .npz files.
         """
+        if isinstance(output_path, int) and not isinstance(output_path, bool):
+            # Backward compatibility: the old signature was (index, output_path)
+            output_path, index = index, output_path
         if index is not None:
             session = self[index]  # 1-based via __getitem__
             session_name = os.path.basename(session.folder_path)
@@ -1383,13 +1389,23 @@ def rewardio(path):
 
 # CLI
 
-if __name__ == "__main__":
-    import sys, code
-    if len(sys.argv) < 2:
-        print("Usage: python rewardio.py <audio_file_or_folder>")
-        sys.exit(1)
+def main(argv=None):
+    """
+    Command-line entry point: load a file or folder, then open an interactive
+    shell with `participant` / `session` / `stimulus` ready to use.
 
-    obj = rewardio(sys.argv[1])
+        python -m rewardio <audio_file_or_folder>
+    """
+    import sys, code
+    argv = sys.argv[1:] if argv is None else list(argv)
+    if len(argv) < 1:
+        print("Usage: python -m rewardio <audio_file_or_folder>")
+        return 1
+
+    # Clear the screen BEFORE loading, so warnings printed while loading
+    # (skipped files, ignored top-level audio) stay visible.
+    clear()
+    obj = rewardio(argv[0])
 
     # Set up convenient variables for the interactive shell
     ns = {
@@ -1413,10 +1429,9 @@ if __name__ == "__main__":
         ns['stimulus'] = obj[1] if len(obj) > 0 else None
         obj._shell_ns = ns
     else:
+        # A single file: only `stimulus` is meaningful
         ns['stimulus'] = obj
-        ns['session'] = obj
 
-    clear()
     print(obj)
 
     if isinstance(obj, Participant):
@@ -1424,14 +1439,14 @@ if __name__ == "__main__":
             "\nrewardio is an interactive tool built for music analysis.\n"
             "Please type participant.help(), session.help(), or stimulus.help() to get started.\n\n"
             "  participant          -> all sessions for this participant\n"
-            "  session          -> currently focused session\n"
-            "  stimulus         -> currently focused item\n"
+            "  session              -> currently focused session\n"
+            "  stimulus             -> currently focused item\n"
             "  participant(1)       -> focus on a specific session\n"
             '  participant("name")  -> focus session by folder name\n'
-            "  session(1)       -> focus on a specific item\n"
-            '  session("name")  -> focus by partial filename match\n'
+            "  session(1)           -> focus on a specific item\n"
+            '  session("name")      -> focus by partial filename match\n'
         )
-    else:
+    elif isinstance(obj, Session):
         print(
             "\nrewardio is an interactive tool built for music analysis.\n"
             "Please type session.help() or stimulus.help() to get started.\n\n"
@@ -1440,4 +1455,17 @@ if __name__ == "__main__":
             "  session(1)       -> focus on a specific item by index\n"
             '  session("name")  -> focus by partial filename match\n'
         )
+    else:
+        print(
+            "\nrewardio is an interactive tool built for music analysis.\n"
+            "Please type stimulus.help() to get started.\n\n"
+            "  stimulus         -> the loaded song\n"
+            "  stimulus.play()  -> open the interactive player\n"
+        )
     code.interact(local=ns, banner="")
+    return 0
+
+
+if __name__ == "__main__":
+    import sys
+    sys.exit(main())

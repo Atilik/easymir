@@ -7,6 +7,7 @@
 ## Quick Start
 
 ```python
+# Run Python from the repo folder (the one containing README.md)
 from rewardio import Stimulus, Session
 
 # Single file

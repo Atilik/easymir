@@ -121,6 +121,51 @@ def test_process_all_items_computes_both_scores(session_folder, inject_rhythm):
         assert s.toussaint_syncopation_score_meter is not None
 
 
+# ── process_and_save argument order ─────────────────────────
+# Regression: README documents process_and_save("output_folder"), but the
+# first positional parameter used to be `index`, so the path was looked up
+# as a song/session name (KeyError).
+
+@pytest.fixture
+def no_classify(monkeypatch):
+    """Skip Essentia/CREPE so process_and_save runs without ML models."""
+    monkeypatch.setattr(Stimulus, "classify", lambda self: None)
+
+
+def test_session_process_and_save_positional_path(session_folder, tmp_path,
+                                                   inject_rhythm, no_classify):
+    sess = Session(session_folder)
+    for s in sess.items:
+        inject_rhythm(s, dur=2.0)               # no BEAT THIS! / Demucs
+    sess.process_and_save(str(tmp_path))
+    _, rows = _read_saved_csv(str(tmp_path))
+    assert [r["filename"] for r in rows] == ["01_alpha.wav", "02_beta.wav"]
+
+
+def test_session_process_and_save_legacy_index_order(session_folder, tmp_path,
+                                                     inject_rhythm, no_classify):
+    # Old calls like process_and_save(2, "out") keep working
+    sess = Session(session_folder)
+    for s in sess.items:
+        inject_rhythm(s, dur=2.0)
+    sess.process_and_save(2, str(tmp_path))
+    _, rows = _read_saved_csv(str(tmp_path))
+    assert [r["filename"] for r in rows] == ["02_beta.wav"]
+
+
+def test_participant_process_and_save_positional_path(participant_folder, tmp_path,
+                                                       inject_rhythm, no_classify):
+    p = Participant(participant_folder)
+    for sess in p.sessions:
+        for s in sess.items:
+            inject_rhythm(s, dur=2.0)
+    path = p.process_and_save(str(tmp_path))
+    assert path is not None and path.startswith(str(tmp_path))
+    _, rows = _read_saved_csv(str(tmp_path))
+    rows = [r for r in rows if r.get("session")]  # drop blank separator row
+    assert [r["session"] for r in rows] == ["sess_a", "sess_b"]
+
+
 # ── Session / Participant averages ──────────────────────────
 
 def test_session_average_fluctuation_and_irregularity(session_folder):
