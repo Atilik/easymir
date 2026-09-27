@@ -1,5 +1,5 @@
 import numpy as np
-import torchaudio
+import librosa
 from demucs.pretrained import get_model
 from demucs.apply import apply_model
 import torch
@@ -12,14 +12,32 @@ torch.set_num_threads(1)
 # Global cache for the model
 _MODEL = None
 
+
+def _load_audio(file, samplerate, channels):
+    """
+    Load an audio file as a float32 tensor (channels, samples) at the model's
+    sample rate. Demucs must see audio at its training rate (44.1 kHz for
+    htdemucs) — a 48 kHz file fed as-is degrades the separation. librosa
+    also decodes .m4a (via ffmpeg), which torchaudio cannot in this env.
+    """
+    y, _ = librosa.load(file, sr=samplerate, mono=False)
+    if y.ndim == 1:
+        y = y[np.newaxis, :]
+    if y.shape[0] != channels:
+        # Mono -> stereo, or >2 channels -> downmix; htdemucs wants stereo
+        # (mono input would crash its first conv layer)
+        y = np.repeat(y.mean(axis=0, keepdims=True), channels, axis=0)
+    return torch.from_numpy(np.ascontiguousarray(y, dtype=np.float32))
+
+
 def separate(file, target_source="drums", gpu=None):
     """
-    Run Demucs source separation model on WAV files to isolate stems.
-    
+    Run Demucs source separation on an audio file to isolate stems.
+
     Parameters
     ----------
     file :  str
-            Path to the mixture WAV file to separate.
+            Path to the mixture audio file to separate.
             
     target_source : str
             target source to separate. (optional, default = Drums)
@@ -32,13 +50,13 @@ def separate(file, target_source="drums", gpu=None):
     Returns
     -------
     target_source : np.ndarray
-            Isolated vocal signal, converted to mono.
+            Isolated target stem (e.g. drums), converted to mono.
     
     accompaniments : np.ndarray
                     Isolated and combined signal, converted to mono.
                     
     sr : int
-         Sample rate
+         Sample rate of the returned signals (the model's rate, 44.1 kHz)
     """
     global _MODEL
 
@@ -47,13 +65,11 @@ def separate(file, target_source="drums", gpu=None):
     if target_source not in SOURCE:
         raise ValueError(f"Unknown target source '{target_source}'. Choose from: {SOURCE}")
 
-    # Load audio file (supports WAV, MP3, FLAC, AIFF, OGG, M4A)
+    # Supported formats: WAV, MP3, FLAC, AIFF, OGG, M4A
     supported_ext = ('.wav', '.mp3', '.flac', '.aiff', '.ogg', '.m4a')
-    if file.lower().endswith(supported_ext):
-        waveform, sr = torchaudio.load(file)
-    else:
+    if not file.lower().endswith(supported_ext):
         raise ValueError(f"Unsupported audio format: {file}. Supported: {supported_ext}")
-    
+
     if _MODEL is None:
         # print("Loading Demucs model (this happens only once)...")
         _MODEL = get_model(name="htdemucs")
@@ -74,13 +90,9 @@ def separate(file, target_source="drums", gpu=None):
 
     model = _MODEL.to(device)
 
-    # Match the model's expected channel count (htdemucs wants stereo —
-    # mono input would crash its first conv layer)
-    if waveform.shape[0] != model.audio_channels:
-        if waveform.shape[0] == 1:
-            waveform = waveform.repeat(model.audio_channels, 1)
-        else:
-            waveform = waveform.mean(dim=0, keepdim=True).repeat(model.audio_channels, 1)
+    # Load at the model's own sample rate and channel count
+    waveform = _load_audio(file, model.samplerate, model.audio_channels)
+    sr = model.samplerate
 
     # Apply separation
     waveform = waveform.unsqueeze(0)
