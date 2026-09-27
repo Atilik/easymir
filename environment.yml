@@ -5,14 +5,17 @@ channels:
 dependencies:
   # ── Interpreter + build/system stack (conda) ──
   - python=3.11
-  - numpy=2.4           # pre-installed for the madmom source build; proven with essentia-tensorflow on py3.11
   - cython              # required to build madmom from source
   - ffmpeg              # mp3/m4a decoding
   - libsndfile
   - ipykernel
   - pip
   # ── Python packages (pip, pinned) ──
+  # numpy comes from pip, NOT conda: conda-forge's numpy links an OpenMP
+  # runtime that clashes with the one bundled in pip's torch — a hard crash
+  # for any process that imports torch before numpy.
   - pip:
+      - numpy==2.4.6
       - torch==2.8.0
       - torchaudio==2.8.0
       - scipy>=1.13,<2

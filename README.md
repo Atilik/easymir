@@ -17,8 +17,8 @@ A simple, interactive command-line Python tool for music information retrieval (
 ## 🛠️ How to Setup Rewardio
 
 **Supported platforms:** macOS (tested). Linux is expected to work but is not yet
-tested — install the PortAudio system library first (`sudo apt install libportaudio2`),
-which audio playback needs. Windows is not supported natively (use WSL2).
+tested — for audio playback, install the PortAudio system library
+(`sudo apt install libportaudio2`). Windows is not supported natively (use WSL2).
 
 Requirements: [conda](https://docs.conda.io/en/latest/miniconda.html), git, and
 (macOS only) the Xcode command-line tools — install with `xcode-select --install` —

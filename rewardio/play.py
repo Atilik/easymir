@@ -4,7 +4,6 @@ import threading
 import tkinter as tk
 import numpy as np
 import mir_eval
-import sounddevice as sd
 import subprocess
 
 import matplotlib
@@ -12,6 +11,22 @@ matplotlib.use('Agg')  # Non-interactive backend — prevents Tk conflicts
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
+
+
+def _sounddevice():
+    """
+    Import sounddevice on first playback. It needs the PortAudio system
+    library, which Linux/headless machines may lack — that should only
+    disable playback, not the whole analysis toolbox.
+    """
+    try:
+        import sounddevice
+    except OSError as e:
+        raise RuntimeError(
+            "Audio playback needs the PortAudio library — on Linux: "
+            "sudo apt install libportaudio2"
+        ) from e
+    return sounddevice
 
 
 # Shared tkinter root (singleton)
@@ -62,6 +77,8 @@ def play_audio(y, sr, title="Audio Player", beat_times=None, onset_times=None, s
     Open a GUI player with matplotlib waveform, moving cursor, and controls.
     Uses FigureCanvasTkAgg + sounddevice for playback.
     """
+    sd = _sounddevice()
+
     # Prepare audio for sounddevice: (n_samples,) or (n_samples, n_channels)
     if y.ndim == 2:
         y_mono = np.mean(y, axis=0)
@@ -273,6 +290,8 @@ def play_interactive(stimulus, xlim=None, ylim=None):
     + play/pause/stop + toggleable beats & onsets (visual + sonification).
     Switchable view modes: Waveform, Mel, Log, Linear, STFT, Pitch.
     """
+    sd = _sounddevice()
+
     from matplotlib.figure import Figure
     import librosa
     import librosa.display
