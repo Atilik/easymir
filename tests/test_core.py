@@ -78,6 +78,20 @@ def test_write_to_csv_never_overwrites_same_second(tmp_path, monkeypatch):
     assert open(p2).read().split()[1] == "second"
 
 
+def test_write_to_csv_defaults_to_cwd(tmp_path, monkeypatch):
+    # Upgrade: default output used to land INSIDE the installed package
+    monkeypatch.chdir(tmp_path)
+    path = write_to_csv([{"x": 1}])
+    assert path.startswith(str(tmp_path))
+    assert "Analysis_" in path
+
+
+def test_natural_key_orders_numbers_numerically():
+    from rewardio.core import natural_key
+    names = ["10_b.wav", "2_a.wav", "1.wav", "song.wav"]
+    assert sorted(names, key=natural_key) == ["1.wav", "2_a.wav", "10_b.wav", "song.wav"]
+
+
 def test_write_to_csv_sparse_rows_union_header(tmp_path):
     path = write_to_csv([{"a": 1, "b": 2}, {"a": 3, "c": 4}], output_path=str(tmp_path))
     with open(path) as f:

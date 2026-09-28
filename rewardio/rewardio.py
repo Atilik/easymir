@@ -7,7 +7,7 @@ from datetime import datetime
 
 from .plot import plot_beats as _plot_beats, plot_waveform as _plot_waveform, plot_beats_and_onsets as _plot_beats_and_onsets, plot_interactive as _plot_interactive, plot_session_boxplots as _plot_session_boxplots, plot_spectrogram as _plot_spectrogram
 from .rhythm import detect_beats, get_bpm, onset_detection, syncopation_score
-from .core import load_audio, write_to_csv, stimulus_help as _stimulus_help, stimulus_print as _stimulus_print, stimulus_print_all as _stimulus_print_all, session_help as _session_help, session_print as _session_print, participant_help as _participant_help, participant_print as _participant_print, clear
+from .core import load_audio, write_to_csv, stimulus_help as _stimulus_help, stimulus_print as _stimulus_print, stimulus_print_all as _stimulus_print_all, session_help as _session_help, session_print as _session_print, participant_help as _participant_help, participant_print as _participant_print, clear, AUDIO_EXTS, natural_key
 from .dsp import normalize, get_loudness, get_rms, compute_fluctuation as _compute_fluctuation, spectral_irregularity as _spectral_irregularity, compute_spectral_features as _compute_spectral_features
 from .play import play_audio, play_interactive as _play_interactive, sonify_beats as _sonify_beats, sonify_beats_and_onsets as _sonify_beats_and_onsets
 from .separate import separate
@@ -700,7 +700,8 @@ class Stimulus:
         Parameters
         ----------
         output_path : str or None
-            Folder to write the Analysis directory in. Defaults to scripts dir.
+            Folder to write the Analysis directory in. Defaults to the
+            current working directory.
         """
         row = self._collect_attrs()
         write_to_csv([row], output_path=output_path)
@@ -721,7 +722,7 @@ class Stimulus:
             song exported from several sessions doesn't overwrite itself.
         """
         if output_path is None:
-            output_path = os.path.dirname(os.path.abspath(__file__))
+            output_path = os.getcwd()
 
         now = datetime.now()
         folder_name = now.strftime("Analysis_%d-%m-%Y")
@@ -759,7 +760,8 @@ class Stimulus:
         Parameters
         ----------
         output_path : str or None
-            Folder to write the Analysis directory in. Defaults to scripts dir.
+            Folder to write the Analysis directory in. Defaults to the
+            current working directory.
         timeseries : bool
             If True, also save all time series as a .npz file.
         """
@@ -943,12 +945,13 @@ class Session:
         if not os.path.isdir(folder_path):
             raise ValueError(f"Path is not a directory: {folder_path}")
             
-        # Iterate over files in the directory
-        for fname in sorted(os.listdir(folder_path)):
+        # Iterate over files in the directory (numbers sorted naturally,
+        # so 2_song comes before 10_song)
+        for fname in sorted(os.listdir(folder_path), key=natural_key):
              if _is_hidden(fname):
                  continue    # .DS_Store, macOS '._' resource files, ...
              ext = os.path.splitext(fname)[1].lower()
-             if ext in ('.wav', '.mp3', '.flac', '.aiff', '.ogg', '.m4a'):
+             if ext in AUDIO_EXTS:
                  fpath = os.path.join(folder_path, fname)
                  try:
                      s = Stimulus(fpath, sr=sr)
@@ -1026,7 +1029,8 @@ class Session:
         Parameters
         ----------
         output_path : str or None
-            Folder to write the Analysis directory in. Defaults to scripts dir.
+            Folder to write the Analysis directory in. Defaults to the
+            current working directory.
         """
         rows = [s._collect_attrs() for s in self.items]
         write_to_csv(rows, output_path=output_path)
@@ -1043,7 +1047,8 @@ class Session:
         Parameters
         ----------
         output_path : str or None
-            Folder to write the Analysis directory in. Defaults to scripts dir.
+            Folder to write the Analysis directory in. Defaults to the
+            current working directory.
         index : int or None
             If given (1-based), process only that stimulus.
             If None, process all items.
@@ -1196,7 +1201,7 @@ class Participant:
 
         print(f"Loading participant from: {folder_path}...")
 
-        for name in sorted(os.listdir(folder_path)):
+        for name in sorted(os.listdir(folder_path), key=natural_key):
             if _is_hidden(name):
                 continue    # .ipynb_checkpoints, __MACOSX, ...
             sub_path = os.path.join(folder_path, name)
@@ -1238,8 +1243,8 @@ class Participant:
         for i, session in enumerate(self.sessions):
             session_name = os.path.basename(session.folder_path)
             for s in session.items:
-                row = s._collect_attrs()
-                row["session"] = session_name
+                # session column first, so grouped CSVs read naturally
+                row = {"session": session_name, **s._collect_attrs()}
                 rows.append(row)
             if i < self.n_sessions - 1:
                 rows.append({})  # Blank row between sessions
@@ -1273,8 +1278,8 @@ class Participant:
             print("Processing complete.")
             rows = []
             for s in session.items:
-                row = s._collect_attrs()
-                row["session"] = session_name
+                # session column first, so grouped CSVs read naturally
+                row = {"session": session_name, **s._collect_attrs()}
                 rows.append(row)
             if timeseries:
                 for s in session.items:
@@ -1445,16 +1450,15 @@ def rewardio(path):
     """
     if os.path.isfile(path):
         ext = os.path.splitext(path)[1].lower()
-        if ext in ('.wav', '.mp3', '.flac', '.aiff', '.ogg', '.m4a'):
+        if ext in AUDIO_EXTS:
             return Stimulus(path)
         else:
             raise ValueError(f"Unsupported file type: {ext}")
     elif os.path.isdir(path):
         if _folder_has_subdirs(path):
-            audio_exts = ('.wav', '.mp3', '.flac', '.aiff', '.ogg', '.m4a')
             loose = [f for f in os.listdir(path)
                      if not _is_hidden(f)
-                     and os.path.splitext(f)[1].lower() in audio_exts]
+                     and os.path.splitext(f)[1].lower() in AUDIO_EXTS]
             if loose:
                 print(
                     f"⚠️  Ignoring {len(loose)} audio file(s) at the top level of "

@@ -1,8 +1,22 @@
 import librosa
 import numpy as np
 import os
+import re
 import csv
 from datetime import datetime
+
+
+# Audio formats rewardio loads (Session scanning, CLI, separation)
+AUDIO_EXTS = ('.wav', '.mp3', '.flac', '.aif', '.aiff', '.ogg', '.m4a')
+
+
+def natural_key(name):
+    """
+    Sort key that orders embedded numbers numerically, so
+    '2_song.wav' comes before '10_song.wav' (plain sort puts 10 first).
+    """
+    return [int(part) if part.isdigit() else part.lower()
+            for part in re.split(r"(\d+)", name)]
 
 
 def load_audio(audio_file_path, sr=44100, mono=False):
@@ -40,7 +54,7 @@ def write_to_csv(rows, output_path=None):
         Each dict is one row. Keys become column headers.
     output_path : str or None
         Parent directory for the Analysis folder.
-        Defaults to the directory this script lives in.
+        Defaults to the current working directory.
 
     Returns
     -------
@@ -48,7 +62,7 @@ def write_to_csv(rows, output_path=None):
         Absolute path to the written CSV file.
     """
     if output_path is None:
-        output_path = os.path.dirname(os.path.abspath(__file__))
+        output_path = os.getcwd()
 
     now = datetime.now()
     folder_name = now.strftime("Analysis_%d-%m-%Y")

@@ -20,6 +20,24 @@ def test_session_loads_audio_only_sorted(session_folder):
     assert names == ["01_alpha.wav", "02_beta.wav"]     # sorted, no notes.txt
 
 
+def test_session_natural_sort(tmp_path, sine_wav):
+    # Upgrade: '10_song' used to sort before '2_song'
+    for name in ("10_c.wav", "2_a.wav", "1_b.wav"):
+        shutil.copy(sine_wav, tmp_path / name)
+    sess = Session(str(tmp_path))
+    assert [s.audio_file_name for s in sess.items] == ["1_b.wav", "2_a.wav", "10_c.wav"]
+
+
+def test_session_loads_aif(tmp_path, sine_wav):
+    # Upgrade: .aif (the common spelling) was rejected; only .aiff was listed
+    import soundfile as sf
+    y, sr = sf.read(sine_wav)
+    sf.write(str(tmp_path / "song.aif"), y, sr, format="AIFF")
+    sess = Session(str(tmp_path))
+    assert [s.audio_file_name for s in sess.items] == ["song.aif"]
+    assert sess.items[0].duration == pytest.approx(2.0, abs=1e-2)
+
+
 def test_session_skips_unreadable_file(session_folder, capsys):
     # Regression (#4): corrupt files are skipped at load with a message
     with open(os.path.join(session_folder, "03_broken.wav"), "w") as f:
@@ -346,7 +364,9 @@ def test_participant_save_adds_session_column(participant_folder, tmp_path):
     path = p.save(output_path=str(tmp_path))
     assert path is not None                             # regression: propagated return
     with open(path) as f:
-        rows = list(csv.DictReader(f))
+        reader = csv.DictReader(f)
+        assert reader.fieldnames[0] == "session"        # upgrade: first column
+        rows = list(reader)
     assert rows[0]["session"] == "sess_a"
     assert all(v in ("", None) for v in rows[1].values())   # blank separator row
     assert rows[2]["session"] == "sess_b"

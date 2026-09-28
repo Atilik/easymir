@@ -4,6 +4,8 @@ from demucs.pretrained import get_model
 from demucs.apply import apply_model
 import torch
 
+from .core import AUDIO_EXTS
+
 # torch runs multi-threaded (its default). An old single-thread pin here
 # ("prevents segfaults in loops") was re-tested on the current stack
 # (torch 2.8, py3.11): looped separations are stable, ~1.4x faster for
@@ -69,10 +71,8 @@ def separate(file, target_source="drums", gpu=None):
     if target_source not in SOURCE:
         raise ValueError(f"Unknown target source '{target_source}'. Choose from: {SOURCE}")
 
-    # Supported formats: WAV, MP3, FLAC, AIFF, OGG, M4A
-    supported_ext = ('.wav', '.mp3', '.flac', '.aiff', '.ogg', '.m4a')
-    if not file.lower().endswith(supported_ext):
-        raise ValueError(f"Unsupported audio format: {file}. Supported: {supported_ext}")
+    if not file.lower().endswith(AUDIO_EXTS):
+        raise ValueError(f"Unsupported audio format: {file}. Supported: {AUDIO_EXTS}")
 
     if _MODEL is None:
         # print("Loading Demucs model (this happens only once)...")

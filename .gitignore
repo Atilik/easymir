@@ -13,7 +13,8 @@ __pycache__/
 audio_test_data/
 downloaded_session_music/
 
-# Analysis output
+# Analysis output (default: written to the current working directory)
+Analysis_*/
 rewardio/Analysis_*/
 
 # Downloaded Essentia models (fetch with: python download_models.py)
