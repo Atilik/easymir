@@ -26,6 +26,17 @@ def test_importing_torch_first_does_not_crash():
     assert "ok" in r.stdout
 
 
+def test_import_does_not_change_matplotlib_backend():
+    # Regression (#18): play.py/plot.py called matplotlib.use('Agg') at import,
+    # silently killing inline plots for anyone using rewardio in a notebook.
+    code = ("import matplotlib; matplotlib.use('pdf')\n"
+            "import rewardio.rewardio, rewardio.play, rewardio.plot, rewardio.rhythm\n"
+            "print(matplotlib.get_backend())\n")
+    r = _run(code)
+    assert r.returncode == 0, r.stderr[-1500:]
+    assert r.stdout.strip().splitlines()[-1] == "pdf"
+
+
 def test_analysis_works_without_portaudio(tmp_path):
     # Linux machines without the PortAudio system library can't import
     # sounddevice — that must only disable playback, not the whole package

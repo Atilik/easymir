@@ -6,11 +6,12 @@ import numpy as np
 import mir_eval
 import subprocess
 
-import matplotlib
-matplotlib.use('Agg')  # Non-interactive backend — prevents Tk conflicts
-import matplotlib.pyplot as plt
+# NOTE: no pyplot, no matplotlib.use() here. All figures are built directly
+# as matplotlib.figure.Figure and embedded via FigureCanvasTkAgg, so importing
+# rewardio never touches the user's matplotlib backend (e.g. notebook inline).
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
+from matplotlib.ticker import ScalarFormatter
 
 
 def _sounddevice():
@@ -61,7 +62,7 @@ def _show_figure(fig, title="Plot"):
     win.attributes("-topmost", True)
     win.after(100, lambda: win.attributes("-topmost", False))
 
-    win.protocol("WM_DELETE_WINDOW", lambda: (plt.close(fig), win.destroy()))
+    win.protocol("WM_DELETE_WINDOW", win.destroy)
     win.wait_window()
 
 
@@ -277,7 +278,6 @@ def play_audio(y, sr, title="Audio Player", beat_times=None, onset_times=None, s
         if state["after_id"] is not None:
             win.after_cancel(state["after_id"])
         sd.stop()
-        plt.close(fig)
         win.destroy()
 
     win.protocol("WM_DELETE_WINDOW", _on_close)
@@ -502,7 +502,7 @@ def play_interactive(stimulus, xlim=None, ylim=None):
         ax.set_yscale('log')
         ax.set_ylim(50, 2000)
         ax.set_yticks([50, 100, 200, 440, 1000, 2000])
-        ax.get_yaxis().set_major_formatter(plt.ScalarFormatter())
+        ax.get_yaxis().set_major_formatter(ScalarFormatter())
         if xlim is not None:
             ax.set_xlim(xlim)
         else:
@@ -966,7 +966,6 @@ def play_interactive(stimulus, xlim=None, ylim=None):
         if state["after_id"] is not None:
             win.after_cancel(state["after_id"])
         sd.stop()
-        plt.close(fig)
         win.destroy()
 
     win.protocol("WM_DELETE_WINDOW", _on_close)

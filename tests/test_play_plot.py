@@ -21,6 +21,51 @@ def test_format_time():
     assert _format_time(3599) == "59:59"
 
 
+# ── figure construction (headless — window display is mocked) ──
+
+@pytest.fixture
+def captured_figure(monkeypatch):
+    """Capture the Figure passed to _show_figure instead of opening a window."""
+    shown = []
+    monkeypatch.setattr("rewardio.plot._show_figure",
+                        lambda fig, title="": shown.append(fig))
+    return shown
+
+
+def test_plot_waveform_builds_figure(sine_wav, captured_figure):
+    from rewardio.rewardio import Stimulus
+    from rewardio.plot import plot_waveform
+    plot_waveform(Stimulus(sine_wav))
+    assert len(captured_figure) == 1
+    ax = captured_figure[0].axes[0]
+    assert "sine_440.wav" in ax.get_title()
+    assert ax.get_xlabel() == "Time (s)"
+
+
+def test_session_boxplot_builds_panels(session_folder, captured_figure):
+    from rewardio.rewardio import Session
+    from rewardio.plot import plot_session_boxplots
+    sess = Session(session_folder)
+    for i, s in enumerate(sess.items):        # inject so no models/prompts run
+        s._bpm = 118.0 + i
+        s.toussaint_syncopation_score = 20 + i
+    plot_session_boxplots(sess)
+    assert len(captured_figure) == 1
+    titles = [ax.get_title() for ax in captured_figure[0].axes]
+    assert titles == ["LUFS", "BPM", "Syncopation"]
+
+
+def test_figures_are_not_pyplot_managed(sine_wav, captured_figure):
+    # Regression (#18): figures must not register with pyplot's figure
+    # manager — that coupling was why the backend had to be forced to Agg
+    import matplotlib.pyplot as plt
+    from rewardio.rewardio import Stimulus
+    from rewardio.plot import plot_waveform
+    before = plt.get_fignums()
+    plot_waveform(Stimulus(sine_wav))
+    assert plt.get_fignums() == before        # nothing leaked into pyplot
+
+
 # ── API surface (regression against accidental renames) ─────
 
 def test_play_module_api():

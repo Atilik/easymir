@@ -3,10 +3,12 @@ import numpy as np
 import librosa
 import librosa.display
 
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
+# NOTE: no pyplot, no matplotlib.use() here — see play.py. Figures are plain
+# matplotlib.figure.Figure objects, so the user's backend (e.g. notebook
+# inline) is never changed by importing rewardio.
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.figure import Figure
+from matplotlib.ticker import ScalarFormatter
 
 from .play import _show_figure, _get_tk_root
 
@@ -14,7 +16,8 @@ from .play import _show_figure, _get_tk_root
 def plot_beats(stimulus, xlim=None, ylim=None):
     """Plot waveform with detected beat markers."""
     y_mono = stimulus._to_mono()
-    fig, ax = plt.subplots(figsize=(12, 4))
+    fig = Figure(figsize=(12, 4))
+    ax = fig.add_subplot(111)
     librosa.display.waveshow(y=y_mono, sr=stimulus.sr, ax=ax,
                              linewidth=1.0, alpha=0.85)
     ax.vlines(stimulus.beat_times, ymin=y_mono.min(), ymax=y_mono.max(),
@@ -37,7 +40,8 @@ def plot_beats(stimulus, xlim=None, ylim=None):
 def plot_waveform(stimulus, xlim=None, ylim=None):
     """Plot the raw waveform."""
     y_mono = stimulus._to_mono()
-    fig, ax = plt.subplots(figsize=(12, 4))
+    fig = Figure(figsize=(12, 4))
+    ax = fig.add_subplot(111)
     librosa.display.waveshow(y=y_mono, sr=stimulus.sr, ax=ax,
                              linewidth=1.0, alpha=0.85)
                              
@@ -56,7 +60,8 @@ def plot_waveform(stimulus, xlim=None, ylim=None):
 def plot_beats_and_onsets(stimulus, xlim=None, ylim=None):
     """Plot waveform with both detected beat markers (red) and onsets (green)."""
     y_mono = stimulus._to_mono()
-    fig, ax = plt.subplots(figsize=(12, 4))
+    fig = Figure(figsize=(12, 4))
+    ax = fig.add_subplot(111)
     
     # Plot waveform
     librosa.display.waveshow(y=y_mono, sr=stimulus.sr, ax=ax,
@@ -140,7 +145,8 @@ def plot_interactive(stimulus, xlim=None, ylim=None):
         pass
 
     # Matplotlib figure
-    fig, ax = plt.subplots(figsize=(12, 4), dpi=100)
+    fig = Figure(figsize=(12, 4), dpi=100)
+    ax = fig.add_subplot(111)
     fig.patch.set_facecolor(BG)
     ax.set_facecolor(SURFACE)
 
@@ -283,7 +289,7 @@ def plot_interactive(stimulus, xlim=None, ylim=None):
     _update_btn_colors()
 
     # Close
-    win.protocol("WM_DELETE_WINDOW", lambda: (plt.close(fig), win.destroy()))
+    win.protocol("WM_DELETE_WINDOW", win.destroy)
     win.wait_window()
 
 
@@ -322,7 +328,8 @@ def plot_session_boxplots(session):
         return
 
     n = len(panels)
-    fig, axes = plt.subplots(1, n, figsize=(5 * n, 5))
+    fig = Figure(figsize=(5 * n, 5))
+    axes = fig.subplots(1, n)
     if n == 1:
         axes = [axes]
 
@@ -387,7 +394,8 @@ def plot_spectrogram(stimulus, xlim=None, ylim=None, scale='mel'):
     win.configure(bg=BG)
     win.resizable(True, True)
 
-    fig, ax = plt.subplots(figsize=(14, 5))
+    fig = Figure(figsize=(14, 5))
+    ax = fig.add_subplot(111)
     fig.patch.set_facecolor(BG)
     ax.set_facecolor(BG)
 
@@ -400,7 +408,8 @@ def plot_spectrogram(stimulus, xlim=None, ylim=None, scale='mel'):
     cbar = fig.colorbar(img, ax=ax, format='%+2.0f dB')
     cbar.ax.yaxis.set_tick_params(color=FG)
     cbar.outline.set_edgecolor(BORDER)
-    plt.setp(cbar.ax.yaxis.get_ticklabels(), color=FG)
+    for label in cbar.ax.yaxis.get_ticklabels():
+        label.set_color(FG)
 
     if xlim is not None:
         ax.set_xlim(xlim)
@@ -423,7 +432,7 @@ def plot_spectrogram(stimulus, xlim=None, ylim=None, scale='mel'):
     canvas.draw()
     canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
 
-    win.protocol("WM_DELETE_WINDOW", lambda: (plt.close(fig), win.destroy()))
+    win.protocol("WM_DELETE_WINDOW", win.destroy)
     win.lift()
     win.focus_force()
     win.wait_window()
@@ -449,7 +458,8 @@ def plot_pitch(stimulus, xlim=None):
     win.configure(bg=BG)
     win.resizable(True, True)
 
-    fig, ax = plt.subplots(figsize=(14, 4))
+    fig = Figure(figsize=(14, 4))
+    ax = fig.add_subplot(111)
     fig.patch.set_facecolor(BG)
     ax.set_facecolor(BG)
 
@@ -465,13 +475,14 @@ def plot_pitch(stimulus, xlim=None):
     cbar.ax.yaxis.set_tick_params(color=FG)
     cbar.ax.yaxis.label.set_color(FG)
     cbar.outline.set_edgecolor(BORDER)
-    plt.setp(cbar.ax.yaxis.get_ticklabels(), color=FG)
+    for label in cbar.ax.yaxis.get_ticklabels():
+        label.set_color(FG)
 
     # Y-axis: log scale for pitch
     ax.set_yscale('log')
     ax.set_ylim(50, 2000)
     ax.set_yticks([50, 100, 200, 440, 1000, 2000])
-    ax.get_yaxis().set_major_formatter(plt.ScalarFormatter())
+    ax.get_yaxis().set_major_formatter(ScalarFormatter())
 
     if xlim is not None:
         ax.set_xlim(xlim)
@@ -492,7 +503,7 @@ def plot_pitch(stimulus, xlim=None):
     canvas.draw()
     canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
 
-    win.protocol("WM_DELETE_WINDOW", lambda: (plt.close(fig), win.destroy()))
+    win.protocol("WM_DELETE_WINDOW", win.destroy)
     win.lift()
     win.focus_force()
     win.wait_window()
