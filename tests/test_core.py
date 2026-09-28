@@ -1,17 +1,17 @@
-"""Tests for rewardio/core.py — loading, CSV export, help/print helpers."""
+"""Tests for mirpsych/core.py — loading, CSV export, help/print helpers."""
 import csv
 import os
 
 import numpy as np
 import pytest
 
-from rewardio.core import (
+from mirpsych.core import (
     load_audio, write_to_csv, clear,
     stimulus_help, stimulus_print, stimulus_print_all,
     session_help, session_print,
     participant_help, participant_print,
 )
-from rewardio.rewardio import Stimulus, Session, Participant
+from mirpsych.mirpsych import Stimulus, Session, Participant
 
 
 # ── load_audio ──────────────────────────────────────────────
@@ -53,14 +53,14 @@ def test_write_to_csv_returns_path_and_writes(tmp_path):
 def test_write_to_csv_filename_has_seconds(tmp_path):
     # Regression: minute-resolution names silently overwrote each other
     path = write_to_csv([{"x": 1}], output_path=str(tmp_path))
-    base = os.path.basename(path)          # rewardio_HH-MM-SS.csv
+    base = os.path.basename(path)          # mirpsych_HH-MM-SS.csv
     assert base.count("-") == 2
-    assert base.startswith("rewardio_") and base.endswith(".csv")
+    assert base.startswith("mirpsych_") and base.endswith(".csv")
 
 
 def test_write_to_csv_never_overwrites_same_second(tmp_path, monkeypatch):
     # Regression: two exports within one second silently overwrote each other
-    import rewardio.core as core
+    import mirpsych.core as core
     from datetime import datetime as real_datetime
     frozen = real_datetime(2026, 9, 27, 14, 48, 27)
 
@@ -72,8 +72,8 @@ def test_write_to_csv_never_overwrites_same_second(tmp_path, monkeypatch):
     monkeypatch.setattr(core, "datetime", FrozenDatetime)
     p1 = write_to_csv([{"song": "first"}], output_path=str(tmp_path))
     p2 = write_to_csv([{"song": "second"}], output_path=str(tmp_path))
-    assert os.path.basename(p1) == "rewardio_14-48-27.csv"
-    assert os.path.basename(p2) == "rewardio_14-48-27_2.csv"
+    assert os.path.basename(p1) == "mirpsych_14-48-27.csv"
+    assert os.path.basename(p2) == "mirpsych_14-48-27_2.csv"
     assert open(p1).read().split()[1] == "first"
     assert open(p2).read().split()[1] == "second"
 
@@ -87,7 +87,7 @@ def test_write_to_csv_defaults_to_cwd(tmp_path, monkeypatch):
 
 
 def test_natural_key_orders_numbers_numerically():
-    from rewardio.core import natural_key
+    from mirpsych.core import natural_key
     names = ["10_b.wav", "2_a.wav", "1.wav", "song.wav"]
     assert sorted(names, key=natural_key) == ["1.wav", "2_a.wav", "10_b.wav", "song.wav"]
 

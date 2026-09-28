@@ -15,7 +15,7 @@ downloaded_session_music/
 
 # Analysis output (default: written to the current working directory)
 Analysis_*/
-rewardio/Analysis_*/
+mirpsych/Analysis_*/
 
 # Downloaded Essentia models (fetch with: python download_models.py)
-rewardio/models/
+mirpsych/models/

@@ -8,8 +8,8 @@ import re
 
 import pytest
 
-from rewardio.rewardio import Stimulus, Session, Participant
-from rewardio.core import stimulus_help, session_help, participant_help
+from mirpsych.mirpsych import Stimulus, Session, Participant
+from mirpsych.core import stimulus_help, session_help, participant_help
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 

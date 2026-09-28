@@ -1422,7 +1422,7 @@ class Participant:
         _participant_print(self)
 
 
-# Folder helpers — used by Session, Participant and rewardio()
+# Folder helpers — used by Session, Participant and mirpsych()
 
 def _is_hidden(name):
     """Hidden/system entries to ignore: .DS_Store, .ipynb_checkpoints,
@@ -1438,9 +1438,9 @@ def _folder_has_subdirs(path):
     return False
 
 
-# rewardio() — smart entry point
+# mirpsych() — smart entry point
 
-def rewardio(path):
+def mirpsych(path):
     """
     Detect what *path* points to and return the appropriate object.
 
@@ -1479,22 +1479,22 @@ def main(argv=None):
     Command-line entry point: load a file or folder, then open an interactive
     shell with `participant` / `session` / `stimulus` ready to use.
 
-        python -m rewardio <audio_file_or_folder>
+        python -m mirpsych <audio_file_or_folder>
     """
     import sys, code
     argv = sys.argv[1:] if argv is None else list(argv)
     if len(argv) < 1:
-        print("Usage: python -m rewardio <audio_file_or_folder>")
+        print("Usage: python -m mirpsych <audio_file_or_folder>")
         return 1
 
     # Clear the screen BEFORE loading, so warnings printed while loading
     # (skipped files, ignored top-level audio) stay visible.
     clear()
-    obj = rewardio(argv[0])
+    obj = mirpsych(argv[0])
 
     # Set up convenient variables for the interactive shell
     ns = {
-        'rewardio': rewardio,
+        'mirpsych': mirpsych,
         'Stimulus': Stimulus,
         'Session': Session,
         'Participant': Participant,
@@ -1521,7 +1521,7 @@ def main(argv=None):
 
     if isinstance(obj, Participant):
         print(
-            "\nrewardio is an interactive tool built for music analysis.\n"
+            "\nmirpsych is an interactive tool built for music analysis.\n"
             "Please type participant.help(), session.help(), or stimulus.help() to get started.\n\n"
             "  participant          -> all sessions for this participant\n"
             "  session              -> currently focused session\n"
@@ -1533,7 +1533,7 @@ def main(argv=None):
         )
     elif isinstance(obj, Session):
         print(
-            "\nrewardio is an interactive tool built for music analysis.\n"
+            "\nmirpsych is an interactive tool built for music analysis.\n"
             "Please type session.help() or stimulus.help() to get started.\n\n"
             "  session          -> the full collection\n"
             "  stimulus         -> currently focused item\n"
@@ -1542,7 +1542,7 @@ def main(argv=None):
         )
     else:
         print(
-            "\nrewardio is an interactive tool built for music analysis.\n"
+            "\nmirpsych is an interactive tool built for music analysis.\n"
             "Please type stimulus.help() to get started.\n\n"
             "  stimulus         -> the loaded song\n"
             "  stimulus.play()  -> open the interactive player\n"

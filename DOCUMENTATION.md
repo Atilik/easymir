@@ -1,6 +1,6 @@
-# Rewardio — Feature Documentation
+# mirpsych — Feature Documentation
 
-**Rewardio** is a Music Information Retrieval (MIR) toolbox for analyzing audio session. It extracts musical features from audio files and exports them as CSV for downstream analysis.
+**mirpsych** is a Music Information Retrieval (MIR) toolbox for analyzing audio session. It extracts musical features from audio files and exports them as CSV for downstream analysis.
 
 ---
 
@@ -8,7 +8,7 @@
 
 ```python
 # Run Python from the repo folder (the one containing README.md)
-from rewardio import Stimulus, Session
+from mirpsych import Stimulus, Session
 
 # Single file
 s = Stimulus("song.wav")

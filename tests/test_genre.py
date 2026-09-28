@@ -1,6 +1,6 @@
-"""Tests for rewardio/genre.py.
+"""Tests for mirpsych/genre.py.
 
-The TF-model classifiers need .pb files under rewardio/models/ (currently
+The TF-model classifiers need .pb files under mirpsych/models/ (currently
 absent) — those tests auto-skip and will activate once models are installed.
 detect_key and the 16 kHz loader are algorithmic (no model files) and run on
 tiny dummy audio.
@@ -9,7 +9,7 @@ import numpy as np
 import pytest
 import soundfile as sf
 
-from rewardio.genre import (
+from mirpsych.genre import (
     detect_key, _load_audio_16k, _EFFNET_PATH, _CREPE_PATH,
 )
 import os
@@ -67,58 +67,58 @@ def long_wav(tmp_path_factory):
     return p
 
 
-@pytest.mark.skipif(not MODELS_PRESENT, reason="rewardio/models/*.pb not installed")
+@pytest.mark.skipif(not MODELS_PRESENT, reason="mirpsych/models/*.pb not installed")
 def test_classify_too_short_audio_raises_clearly(sine_wav):
     # Regression: < ~2.1 s used to surface as a cryptic Essentia TypeError
-    from rewardio.genre import classify_genre
+    from mirpsych.genre import classify_genre
     with pytest.raises(ValueError, match="too short"):
         classify_genre(sine_wav)               # 2 s — below one EffNet patch
 
 
-@pytest.mark.skipif(not MODELS_PRESENT, reason="rewardio/models/*.pb not installed")
+@pytest.mark.skipif(not MODELS_PRESENT, reason="mirpsych/models/*.pb not installed")
 def test_classify_genre(long_wav):
-    from rewardio.genre import classify_genre
+    from mirpsych.genre import classify_genre
     preds = classify_genre(long_wav, top_n=3)
     assert len(preds) == 3
     assert all(0 <= c <= 1 for _, c in preds)
 
 
-@pytest.mark.skipif(not MODELS_PRESENT, reason="rewardio/models/*.pb not installed")
+@pytest.mark.skipif(not MODELS_PRESENT, reason="mirpsych/models/*.pb not installed")
 def test_classify_voice_instrumental(long_wav):
-    from rewardio.genre import classify_voice_instrumental
+    from mirpsych.genre import classify_voice_instrumental
     preds = classify_voice_instrumental(long_wav)
     labels = {label for label, _ in preds}
     assert labels <= {"voice", "instrumental"}
 
 
-@pytest.mark.skipif(not MODELS_PRESENT, reason="rewardio/models/*.pb not installed")
+@pytest.mark.skipif(not MODELS_PRESENT, reason="mirpsych/models/*.pb not installed")
 def test_classify_mood(long_wav):
-    from rewardio.genre import classify_mood
+    from mirpsych.genre import classify_mood
     moods = classify_mood(long_wav)
     assert set(moods.keys()) == {"happy", "sad", "aggressive", "relaxed"}
     assert all(0 <= v <= 1 for v in moods.values())
 
 
-@pytest.mark.skipif(not MODELS_PRESENT, reason="rewardio/models/*.pb not installed")
+@pytest.mark.skipif(not MODELS_PRESENT, reason="mirpsych/models/*.pb not installed")
 def test_classify_all_shares_embeddings(long_wav):
-    from rewardio.genre import classify_all
+    from mirpsych.genre import classify_all
     results = classify_all(long_wav)
     assert set(results.keys()) == {"genre", "voice_instrumental", "mood"}
 
 
-@pytest.mark.skipif(not MODELS_PRESENT, reason="rewardio/models/*.pb not installed")
+@pytest.mark.skipif(not MODELS_PRESENT, reason="mirpsych/models/*.pb not installed")
 def test_stimulus_genre_property_real(long_wav):
     # Regression: Stimulus.genre crashed on first access (AttributeError)
-    from rewardio.rewardio import Stimulus
+    from mirpsych.mirpsych import Stimulus
     s = Stimulus(long_wav)
     assert isinstance(s.genre, str)
     assert len(s.genre_top5) == 5
 
 
-@pytest.mark.skipif(not MODELS_PRESENT, reason="rewardio/models/*.pb not installed")
+@pytest.mark.skipif(not MODELS_PRESENT, reason="mirpsych/models/*.pb not installed")
 def test_stimulus_classify_short_audio_skips_genre(sine_wav, capsys):
     # < ~2.1 s can't be genre-classified: warn and keep going (key still runs)
-    from rewardio.rewardio import Stimulus
+    from mirpsych.mirpsych import Stimulus
     s = Stimulus(sine_wav)
     s.classify()
     assert "too short" in capsys.readouterr().out
@@ -128,7 +128,7 @@ def test_stimulus_classify_short_audio_skips_genre(sine_wav, capsys):
 
 @pytest.mark.skipif(not CREPE_PRESENT, reason="crepe-medium-1.pb not installed")
 def test_detect_pitch_crepe(sine_wav):
-    from rewardio.genre import detect_pitch_crepe
+    from mirpsych.genre import detect_pitch_crepe
     time, freq, conf = detect_pitch_crepe(sine_wav)     # 440 Hz sine
     voiced = freq[conf > 0.5]
     assert len(voiced) > 0

@@ -1,11 +1,11 @@
 """
-Shared fixtures for the rewardio test suite.
+Shared fixtures for the mirpsych test suite.
 
 All audio is synthetic (sine waves / click tracks) so tests are fast,
 deterministic, and need no external data or ML models.
 
 Heavy paths (Demucs, BEAT THIS!, Essentia classifiers) are gated behind
-REWARDIO_RUN_SLOW=1 and model-cache checks — see test_separate.py / test_genre.py.
+MIRPSYCH_RUN_SLOW=1 and model-cache checks — see test_separate.py / test_genre.py.
 """
 import os
 import sys
@@ -15,12 +15,12 @@ import numpy as np
 import pytest
 import soundfile as sf
 
-# Make `import rewardio.*` work no matter where pytest is invoked from
+# Make `import mirpsych.*` work no matter where pytest is invoked from
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 SR = 44100
 
-RUN_SLOW = bool(os.environ.get("REWARDIO_RUN_SLOW"))
+RUN_SLOW = bool(os.environ.get("MIRPSYCH_RUN_SLOW"))
 
 
 # ── Signal builders ─────────────────────────────────────────

@@ -1,6 +1,6 @@
-# rewardio: Music Analysis Toolbox
+# mirpsych: Music Analysis Toolbox
 
-A simple, interactive command-line Python tool for music information retrieval (MIR). `rewardio` provides an intuitive interactive shell to load, analyze, and visualize audio files—either individually, by session (folder of songs), or by participant (folder of sessions).
+A simple, interactive command-line Python tool for music information retrieval (MIR). `mirpsych` provides an intuitive interactive shell to load, analyze, and visualize audio files—either individually, by session (folder of songs), or by participant (folder of sessions).
 
 ## Features
 
@@ -14,7 +14,7 @@ A simple, interactive command-line Python tool for music information retrieval (
 
 ---
 
-## 🛠️ How to Setup Rewardio
+## 🛠️ How to Setup mirpsych
 
 **Supported platforms:** macOS (tested). Linux is expected to work but is not yet
 tested — for audio playback, install the PortAudio system library
@@ -24,25 +24,25 @@ Requirements: [conda](https://docs.conda.io/en/latest/miniconda.html), git, and
 (macOS only) the Xcode command-line tools — install with `xcode-select --install` —
 because one dependency (madmom) is compiled from source.
 
-**Installed rewardio before?** Start fresh — `conda env create` will not overwrite an
+**Installed mirpsych before?** Start fresh — `conda env create` will not overwrite an
 existing environment:
 
 ```bash
 conda deactivate
-conda env remove -n rewardio
-# then re-clone (step 1 below), or run `git pull` inside your existing rewardio folder
+conda env remove -n mirpsych
+# then re-clone (step 1 below), or run `git pull` inside your existing mirpsych folder
 ```
 
 ```bash
 # 1. Clone the repo
-git clone https://github.com/Atilik/rewardio.git
-cd rewardio
+git clone https://github.com/Atilik/mirpsych.git
+cd mirpsych
 
 # 2. Create the conda environment (installs everything; takes a few minutes)
 conda env create -f environment.yml
 
 # 3. Activate it
-conda activate rewardio
+conda activate mirpsych
 
 # 4. Download the classifier models (~45 MB — enables genre/mood/pitch features)
 python download_models.py
@@ -50,8 +50,8 @@ python download_models.py
 # 5. Verify the install — should finish with no failures (e.g. "154 passed, 3 skipped")
 python run_tests.py
 
-# 6. Run rewardio
-python -m rewardio /path/to/audio/
+# 6. Run mirpsych
+python -m mirpsych /path/to/audio/
 ```
 
 **Notes**
@@ -72,40 +72,40 @@ this `README.md`). Then launch the tool with the path to an audio file, a sessio
 or a participant folder:
 
 ```bash
-conda activate rewardio
-cd /path/to/rewardio           # the repo folder
+conda activate mirpsych
+cd /path/to/mirpsych           # the repo folder
 
 # Load a single song:
-python -m rewardio /path/to/song.wav
+python -m mirpsych /path/to/song.wav
 
 # Load a session (folder of audio files):
-python -m rewardio /path/to/session_folder/
+python -m mirpsych /path/to/session_folder/
 
 # Load a participant (folder containing session folders):
-python -m rewardio /path/to/participant_folder/
+python -m mirpsych /path/to/participant_folder/
 ```
 
 This drops you into an interactive Python shell pre-loaded with your data. Leave it with `exit()` or Ctrl-D.
 
-Prefer scripts or notebooks? See [DOCUMENTATION.md](DOCUMENTATION.md) — `from rewardio import Stimulus, Session, Participant`.
+Prefer scripts or notebooks? See [DOCUMENTATION.md](DOCUMENTATION.md) — `from mirpsych import Stimulus, Session, Participant`.
 
 ---
 
 ## 📖 The Hierarchy
 
-`rewardio` structures your data into three levels depending on the folder you pass:
+`mirpsych` structures your data into three levels depending on the folder you pass:
 
 1. **Participant**: A folder containing multiple *Session* folders.
 2. **Session**: A folder containing multiple *Stimulus* audio files.
 3. **Stimulus**: A single audio file (e.g., a `.wav` or `.mp3`).
 
-When you load a folder, `rewardio` automatically gives you variables (`participant`, `session`, `stimulus`) to interact with your data immediately.
+When you load a folder, `mirpsych` automatically gives you variables (`participant`, `session`, `stimulus`) to interact with your data immediately.
 
 ---
 
 ## 💻 Using the Interactive Shell
 
-Type the following commands directly into the terminal once `rewardio` is launched:
+Type the following commands directly into the terminal once `mirpsych` is launched:
 
 ### Navigating Data
 - `participant(1)` — Focus on the 1st session. Updates the `session` and `stimulus` variables.
@@ -128,7 +128,7 @@ Type the following commands directly into the terminal once `rewardio` is launch
 - `session.boxplot()` — Boxplots of BPM, LUFS, and syncopation across the session.
 
 ### Getting Metrics
-Access properties on-the-fly. If a metric hasn't been computed yet, `rewardio` computes it on first access (model-based metrics take a few seconds).
+Access properties on-the-fly. If a metric hasn't been computed yet, `mirpsych` computes it on first access (model-based metrics take a few seconds).
 ```python
 >>> stimulus.bpm
 120.5
@@ -150,7 +150,7 @@ Access properties on-the-fly. If a metric hasn't been computed yet, `rewardio` c
 - `stimulus.partial_process_save(rhythm=True, pitch=True)`
   Computes only the selected feature groups (`rhythm`, `syncopation`, `genre`, `pitch`, `key`, `spectral`) instead of everything. `rhythm` is beats/BPM only (fast); `syncopation` runs Demucs separation + scoring (slow). Available on `session` and `participant` too.
 
-Results are written to `output_folder/Analysis_DD-MM-YYYY/rewardio_HH-MM-SS.csv` (the exact path is printed after saving).
+Results are written to `output_folder/Analysis_DD-MM-YYYY/mirpsych_HH-MM-SS.csv` (the exact path is printed after saving).
 
 ### Aggregate Metrics
 - `session.average_fluctuation` / `session.average_irregularity` — Mean fluctuation / spectral irregularity across the session's songs.
@@ -161,7 +161,7 @@ Results are written to `output_folder/Analysis_DD-MM-YYYY/rewardio_HH-MM-SS.csv`
 ## 🛠 Advanced Features
 
 ### Separation & Syncopation
-Syncopation requires isolating the drums with Demucs. The first time you ask for a syncopation score, `rewardio` asks for confirmation (`Proceed? [Y/n]`) — on a CPU, separation takes roughly as long as the song itself.
+Syncopation requires isolating the drums with Demucs. The first time you ask for a syncopation score, `mirpsych` asks for confirmation (`Proceed? [Y/n]`) — on a CPU, separation takes roughly as long as the song itself.
 ```python
 >>> stimulus.syncopation_score()
 ```
@@ -183,9 +183,9 @@ python run_tests.py
 
 # Also run the slow model tests (madmom beat detection, Demucs separation
 # if the htdemucs checkpoint is already cached)
-REWARDIO_RUN_SLOW=1 python run_tests.py
+MIRPSYCH_RUN_SLOW=1 python run_tests.py
 ```
 
-Tests that need the Essentia classifier models (`rewardio/models/*.pb`)
+Tests that need the Essentia classifier models (`mirpsych/models/*.pb`)
 skip automatically while those files are absent — run `python download_models.py`
 to activate them.
