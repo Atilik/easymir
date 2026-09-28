@@ -122,3 +122,17 @@ def test_separate_48k_at_model_rate(clicks_48k):
 def test_separate_m4a(clicks_m4a):
     target, accompaniment, sr = separate(clicks_m4a, target_source="drums")
     assert sr == 44100 and len(target) == len(accompaniment) > 0
+
+
+@SLOW
+def test_separate_loop_stable_multithreaded(click_wav):
+    # Regression: torch used to be pinned to 1 thread over a segfault fear in
+    # loops. Re-verified stable multi-threaded — this guards that in CI-like
+    # runs. Stems are not bit-reproducible (true at any thread count), but
+    # their shape and rough energy must agree.
+    import torch
+    assert torch.get_num_threads() > 1        # the pin must stay gone
+    a, _, _ = separate(click_wav, target_source="drums")
+    b, _, _ = separate(click_wav, target_source="drums")
+    assert a.shape == b.shape
+    assert np.corrcoef(a, b)[0, 1] > 0.99
