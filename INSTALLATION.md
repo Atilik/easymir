@@ -68,7 +68,7 @@ You are done when it prints:
 
 ## Using easymir (every day)
 
-Two buttons, described in [how_to_run.md](how_to_run.md):
+Two buttons, described in [HOW_TO_RUN.md](HOW_TO_RUN.md):
 
 - **`analyze_folder.command`** — analyze everything automatically → CSV.
 - **`run_easymir.command`** — explore interactively.

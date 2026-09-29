@@ -109,10 +109,10 @@ def test_analyzer_has_required_safeguards():
 
 
 def test_how_to_run_md_mentions_both_commands():
-    s = _read("how_to_run.md")
+    s = _read("HOW_TO_RUN.md")
     for needle in ("analyze_folder.command", "run_easymir.command",
                    "Analysis_", "INSTALLATION.md"):
-        assert needle in s, f"how_to_run.md no longer mentions: {needle}"
+        assert needle in s, f"HOW_TO_RUN.md no longer mentions: {needle}"
 
 
 def test_installation_md_mentions_the_moving_parts():
