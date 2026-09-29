@@ -1,17 +1,17 @@
-"""Tests for mirpsych/core.py — loading, CSV export, help/print helpers."""
+"""Tests for easymir/core.py — loading, CSV export, help/print helpers."""
 import csv
 import os
 
 import numpy as np
 import pytest
 
-from mirpsych.core import (
+from easymir.core import (
     load_audio, write_to_csv, clear,
     stimulus_help, stimulus_print, stimulus_print_all,
     session_help, session_print,
     participant_help, participant_print,
 )
-from mirpsych.mirpsych import Stimulus, Session, Participant
+from easymir.easymir import Stimulus, Session, Participant
 
 
 # ── load_audio ──────────────────────────────────────────────
@@ -53,14 +53,14 @@ def test_write_to_csv_returns_path_and_writes(tmp_path):
 def test_write_to_csv_filename_has_seconds(tmp_path):
     # Regression: minute-resolution names silently overwrote each other
     path = write_to_csv([{"x": 1}], output_path=str(tmp_path))
-    base = os.path.basename(path)          # mirpsych_HH-MM-SS.csv
+    base = os.path.basename(path)          # easymir_HH-MM-SS.csv
     assert base.count("-") == 2
-    assert base.startswith("mirpsych_") and base.endswith(".csv")
+    assert base.startswith("easymir_") and base.endswith(".csv")
 
 
 def test_write_to_csv_never_overwrites_same_second(tmp_path, monkeypatch):
     # Regression: two exports within one second silently overwrote each other
-    import mirpsych.core as core
+    import easymir.core as core
     from datetime import datetime as real_datetime
     frozen = real_datetime(2026, 9, 27, 14, 48, 27)
 
@@ -72,8 +72,8 @@ def test_write_to_csv_never_overwrites_same_second(tmp_path, monkeypatch):
     monkeypatch.setattr(core, "datetime", FrozenDatetime)
     p1 = write_to_csv([{"song": "first"}], output_path=str(tmp_path))
     p2 = write_to_csv([{"song": "second"}], output_path=str(tmp_path))
-    assert os.path.basename(p1) == "mirpsych_14-48-27.csv"
-    assert os.path.basename(p2) == "mirpsych_14-48-27_2.csv"
+    assert os.path.basename(p1) == "easymir_14-48-27.csv"
+    assert os.path.basename(p2) == "easymir_14-48-27_2.csv"
     assert open(p1).read().split()[1] == "first"
     assert open(p2).read().split()[1] == "second"
 
@@ -87,7 +87,7 @@ def test_write_to_csv_defaults_to_cwd(tmp_path, monkeypatch):
 
 
 def test_natural_key_orders_numbers_numerically():
-    from mirpsych.core import natural_key
+    from easymir.core import natural_key
     names = ["10_b.wav", "2_a.wav", "1.wav", "song.wav"]
     assert sorted(names, key=natural_key) == ["1.wav", "2_a.wav", "10_b.wav", "song.wav"]
 

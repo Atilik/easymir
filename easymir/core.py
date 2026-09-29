@@ -6,7 +6,7 @@ import csv
 from datetime import datetime
 
 
-# Audio formats mirpsych loads (Session scanning, CLI, separation)
+# Audio formats easymir loads (Session scanning, CLI, separation)
 AUDIO_EXTS = ('.wav', '.mp3', '.flac', '.aif', '.aiff', '.ogg', '.m4a')
 
 
@@ -69,7 +69,7 @@ def write_to_csv(rows, output_path=None):
     folder_path = os.path.join(output_path, folder_name)
     os.makedirs(folder_path, exist_ok=True)
 
-    base = now.strftime("mirpsych_%H-%M-%S")
+    base = now.strftime("easymir_%H-%M-%S")
     csv_path = os.path.join(folder_path, f"{base}.csv")
     # Never overwrite an earlier export from the same second
     n = 2

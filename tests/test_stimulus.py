@@ -1,4 +1,4 @@
-"""Tests for the Stimulus class (mirpsych/mirpsych.py).
+"""Tests for the Stimulus class (easymir/easymir.py).
 
 ML-dependent attributes (beats, separation, classification) are exercised
 through data injection so no model runs.
@@ -9,7 +9,7 @@ import os
 import numpy as np
 import pytest
 
-from mirpsych.mirpsych import Stimulus
+from easymir.easymir import Stimulus
 
 
 # ── construction / validation ───────────────────────────────
@@ -302,7 +302,7 @@ def test_partial_process_save_syncopation_only(sine_wav, tmp_path, inject_rhythm
 
 
 def test_partial_process_save_genre_only(sine_wav, tmp_path, monkeypatch):
-    import mirpsych.mirpsych as rw
+    import easymir.easymir as rw
     monkeypatch.setattr(rw, "_classify_all", lambda p: {
         "genre": [("Rock---Classic Rock", 0.9)],
         "voice_instrumental": [("voice", 0.8), ("instrumental", 0.2)],
@@ -318,7 +318,7 @@ def test_partial_process_save_genre_only(sine_wav, tmp_path, monkeypatch):
 
 
 def test_partial_process_save_pitch_only(sine_wav, tmp_path, monkeypatch):
-    import mirpsych.mirpsych as rw
+    import easymir.easymir as rw
     monkeypatch.setattr(rw, "_detect_pitch_crepe", lambda p: (
         np.array([0.0, 0.1, 0.2]),
         np.array([440.0, 441.0, 439.0]),
@@ -378,7 +378,7 @@ def test_short_file_loudness_and_save(tmp_path):
 @pytest.fixture
 def fake_models(monkeypatch):
     """Stand-ins for the Essentia/CREPE models; records which ones ran."""
-    import mirpsych.mirpsych as rw
+    import easymir.easymir as rw
     calls = []
 
     def fake_classify_all(path):
@@ -405,7 +405,7 @@ def fake_models(monkeypatch):
 def missing_models(monkeypatch):
     """Simulate a user who skipped `python download_models.py`
     (key detection is algorithmic, so it still runs for real)."""
-    import mirpsych.mirpsych as rw
+    import easymir.easymir as rw
 
     def missing(path):
         raise FileNotFoundError("model file x.pb not installed — run: python download_models.py")

@@ -21,16 +21,16 @@ def test_importing_torch_first_does_not_crash():
     # Regression: conda-forge numpy + pip torch loaded two OpenMP runtimes, and
     # importing torch before numpy aborted the process (OMP Error #15).
     # Fails in environments built before the fix — rebuild from environment.yml.
-    r = _run("import torch; import numpy; import mirpsych.mirpsych; print('ok')")
+    r = _run("import torch; import numpy; import easymir.easymir; print('ok')")
     assert r.returncode == 0, f"exit {r.returncode}: {r.stderr[-1500:]}"
     assert "ok" in r.stdout
 
 
 def test_import_does_not_change_matplotlib_backend():
     # Regression (#18): play.py/plot.py called matplotlib.use('Agg') at import,
-    # silently killing inline plots for anyone using mirpsych in a notebook.
+    # silently killing inline plots for anyone using easymir in a notebook.
     code = ("import matplotlib; matplotlib.use('pdf')\n"
-            "import mirpsych.mirpsych, mirpsych.play, mirpsych.plot, mirpsych.rhythm\n"
+            "import easymir.easymir, easymir.play, easymir.plot, easymir.rhythm\n"
             "print(matplotlib.get_backend())\n")
     r = _run(code)
     assert r.returncode == 0, r.stderr[-1500:]
@@ -42,7 +42,7 @@ def test_analysis_works_without_portaudio(tmp_path):
     # sounddevice — that must only disable playback, not the whole package
     (tmp_path / "sounddevice.py").write_text(
         "raise OSError('PortAudio library not found')\n")
-    code = ("import mirpsych.mirpsych, mirpsych.play as p\n"
+    code = ("import easymir.easymir, easymir.play as p\n"
             "try:\n"
             "    p._sounddevice()\n"
             "except RuntimeError as e:\n"

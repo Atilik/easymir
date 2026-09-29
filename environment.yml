@@ -1,4 +1,4 @@
-name: mirpsych
+name: easymir
 channels:
   - conda-forge
   - defaults

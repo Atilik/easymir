@@ -1,6 +1,6 @@
-# mirpsych — Feature Documentation
+# easymir — Feature Documentation
 
-**mirpsych** is a Music Information Retrieval (MIR) toolbox for analyzing audio session. It extracts musical features from audio files and exports them as CSV for downstream analysis.
+**easymir** is a Music Information Retrieval (MIR) toolbox for analyzing audio session. It extracts musical features from audio files and exports them as CSV for downstream analysis.
 
 ---
 
@@ -8,7 +8,7 @@
 
 ```python
 # Run Python from the repo folder (the one containing README.md)
-from mirpsych import Stimulus, Session
+from easymir import Stimulus, Session
 
 # Single file
 s = Stimulus("song.wav")

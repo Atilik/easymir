@@ -1,8 +1,8 @@
-"""Tests for mirpsych/dsp.py — one test (or more) per function."""
+"""Tests for easymir/dsp.py — one test (or more) per function."""
 import numpy as np
 import pytest
 
-from mirpsych.dsp import (
+from easymir.dsp import (
     get_loudness, get_rms, normalize, filter as dsp_filter,
     filter_low_pass, filter_high_pass, filter_bell,
     compute_fluctuation, spectral_irregularity, compute_spectral_features,
@@ -20,7 +20,7 @@ def test_get_loudness_mono():
 
 
 def test_get_loudness_stereo():
-    y = np.stack([make_sine(440), make_sine(220)])  # (2, n) — mirpsych layout
+    y = np.stack([make_sine(440), make_sine(220)])  # (2, n) — easymir layout
     lufs, rms_db = get_loudness(y, SR)
     assert np.isfinite(lufs) and np.isfinite(rms_db)
 

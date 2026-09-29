@@ -1,7 +1,7 @@
-"""Tests for mirpsych/rhythm.py.
+"""Tests for easymir/rhythm.py.
 
 Pure-logic functions are tested directly. Model-based beat detection
-(BEAT THIS! / madmom) is gated behind MIRPSYCH_RUN_SLOW=1.
+(BEAT THIS! / madmom) is gated behind EASYMIR_RUN_SLOW=1.
 """
 import math
 import os
@@ -9,7 +9,7 @@ import os
 import numpy as np
 import pytest
 
-from mirpsych.rhythm import (
+from easymir.rhythm import (
     get_bpm, onset_detection, syncopation_score,
     _pattern_from_beats_and_onsets, _score_pattern,
     _derive_positions_and_meter, METER_WEIGHTS,
@@ -231,11 +231,11 @@ def test_syncopation_score_with_beat_positions():
 
 # ── detect_beats (model-based — slow) ───────────────────────
 
-@pytest.mark.skipif(not RUN_SLOW, reason="set MIRPSYCH_RUN_SLOW=1 to run model-based beat detection")
+@pytest.mark.skipif(not RUN_SLOW, reason="set EASYMIR_RUN_SLOW=1 to run model-based beat detection")
 def test_detect_beats_beat_this_on_clicks():
     # Default beat-detection path (BEAT THIS!) — downloads its checkpoint on
     # first ever run (~80 MB), cached afterwards.
-    from mirpsych.rhythm import detect_beats
+    from easymir.rhythm import detect_beats
     times = np.arange(0.5, 9.5, 0.5)
     y = make_clicks(times, 10.0)
     beat_times, beat_frames, positions, meter = detect_beats(y, SR)
@@ -246,9 +246,9 @@ def test_detect_beats_beat_this_on_clicks():
     assert 110 <= bpm <= 130 or 55 <= bpm <= 65   # 120 or half-tempo octave
 
 
-@pytest.mark.skipif(not RUN_SLOW, reason="set MIRPSYCH_RUN_SLOW=1 to run model-based beat detection")
+@pytest.mark.skipif(not RUN_SLOW, reason="set EASYMIR_RUN_SLOW=1 to run model-based beat detection")
 def test_detect_beats_madmom_on_clicks():
-    from mirpsych.rhythm import detect_beats
+    from easymir.rhythm import detect_beats
     times = np.arange(0.5, 9.5, 0.5)
     y = make_clicks(times, 10.0)
     beat_times, beat_frames, positions, meter = detect_beats(y, SR, use_madmom=True)

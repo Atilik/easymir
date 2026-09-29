@@ -5,7 +5,7 @@ import librosa.display
 
 # NOTE: no pyplot, no matplotlib.use() here — see play.py. Figures are plain
 # matplotlib.figure.Figure objects, so the user's backend (e.g. notebook
-# inline) is never changed by importing mirpsych.
+# inline) is never changed by importing easymir.
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 from matplotlib.ticker import ScalarFormatter

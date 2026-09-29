@@ -1,4 +1,4 @@
-"""Tests for the package entry points: imports, `python -m mirpsych`, and the shell."""
+"""Tests for the package entry points: imports, `python -m easymir`, and the shell."""
 import os
 import shutil
 import subprocess
@@ -12,24 +12,24 @@ REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # ── package imports ─────────────────────────────────────────
 
 def test_package_exports():
-    # Regression: DOCUMENTATION's `from mirpsych import ...` used to fail
+    # Regression: DOCUMENTATION's `from easymir import ...` used to fail
     # (no __init__.py)
-    from mirpsych import Stimulus, Session, Participant
-    import mirpsych.mirpsych as core
+    from easymir import Stimulus, Session, Participant
+    import easymir.easymir as core
     assert Stimulus is core.Stimulus
     assert Session is core.Session
     assert Participant is core.Participant
 
 
 def test_package_unknown_attribute_raises():
-    import mirpsych
+    import easymir
     with pytest.raises(AttributeError):
-        mirpsych.NotAThing
+        easymir.NotAThing
 
 
 def test_submodule_import_is_lightweight():
     # Lazy exports: importing a light submodule must not drag in the ML stack
-    code = ("import sys, mirpsych, mirpsych.dsp; "
+    code = ("import sys, easymir, easymir.dsp; "
             "print('torch' in sys.modules, 'essentia' in sys.modules)")
     r = subprocess.run([sys.executable, "-c", code], cwd=REPO,
                        capture_output=True, text=True, timeout=300)
@@ -41,9 +41,9 @@ def test_submodule_import_is_lightweight():
 
 @pytest.fixture
 def run_main(monkeypatch):
-    """Run mirpsych's CLI main() with the terminal clear and the interactive
+    """Run easymir's CLI main() with the terminal clear and the interactive
     console replaced by recorders. Returns (exit_code, namespace, events)."""
-    import mirpsych.mirpsych as core
+    import easymir.easymir as core
     captured = {}
     events = []
 
@@ -67,7 +67,7 @@ def run_main(monkeypatch):
 def test_main_without_args_prints_usage(run_main, capsys):
     rc, ns, events = run_main([])
     assert rc == 1
-    assert "Usage: python -m mirpsych" in capsys.readouterr().out
+    assert "Usage: python -m easymir" in capsys.readouterr().out
     assert events == []                        # nothing loaded, no shell
 
 
@@ -81,7 +81,7 @@ def test_main_clears_before_loading(participant_folder, sine_wav, run_main, caps
 
 
 def test_main_participant_namespace(participant_folder, run_main, capsys):
-    from mirpsych.mirpsych import Participant, Session, Stimulus
+    from easymir.easymir import Participant, Session, Stimulus
     rc, ns, _ = run_main([participant_folder])
     assert isinstance(ns["participant"], Participant)
     assert isinstance(ns["session"], Session)
@@ -89,7 +89,7 @@ def test_main_participant_namespace(participant_folder, run_main, capsys):
 
 
 def test_main_session_namespace(session_folder, run_main, capsys):
-    from mirpsych.mirpsych import Session
+    from easymir.easymir import Session
     rc, ns, _ = run_main([session_folder])
     assert isinstance(ns["session"], Session)
     assert ns["stimulus"].audio_file_name == "01_alpha.wav"
@@ -106,12 +106,12 @@ def test_main_single_file_namespace(sine_wav, run_main, capsys):
     assert "session(1)" not in out and "stimulus.help()" in out
 
 
-# ── `python -m mirpsych` (the README's run command) ─────────
+# ── `python -m easymir` (the README's run command) ─────────
 
-def test_python_dash_m_mirpsych(sine_wav):
-    # Regression: README's old `python mirpsych.py` failed with ImportError.
+def test_python_dash_m_easymir(sine_wav):
+    # Regression: README's old `python easymir.py` failed with ImportError.
     # stdin is empty, so the shell starts and exits immediately.
-    r = subprocess.run([sys.executable, "-W", "ignore", "-m", "mirpsych", sine_wav],
+    r = subprocess.run([sys.executable, "-W", "ignore", "-m", "easymir", sine_wav],
                        cwd=REPO, stdin=subprocess.DEVNULL,
                        capture_output=True, text=True, timeout=300)
     assert r.returncode == 0, r.stderr[-2000:]
