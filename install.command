@@ -92,15 +92,9 @@ main() {
         ok "macOS $macver"
     fi
 
-    # 3. Xcode Command Line Tools presence (checked early only to size the disk need)
-    local need_clt=0
-    if ! pkgutil --pkg-info=com.apple.pkg.CLTools_Executables >/dev/null 2>&1 \
-       && ! xcrun --find clang >/dev/null 2>&1; then
-        need_clt=1
-    fi
-
-    # 4. Disk space (more needed if the compiler tools must be installed too)
-    local need_gb=6; (( need_clt )) && need_gb=10
+    # 3. Disk space — nothing compiles and no developer tools are needed:
+    #    every hard-to-build component ships as a prebuilt wheel in wheels/
+    local need_gb=6
     local free_gb=$(df -g / | awk 'NR==2 {print $4}')
     if (( free_gb < need_gb )); then
         bad "Only ${free_gb} GB free — easymir needs about ${need_gb} GB."
@@ -110,7 +104,7 @@ main() {
         ok "${free_gb} GB free disk space"
     fi
 
-    # 5. This script must sit inside the easymir folder, and it must be readable
+    # 4. This script must sit inside the easymir folder, and it must be readable
     if [[ ! -e "$SCRIPT_DIR/environment.yml" ]]; then
         if ! ls "$SCRIPT_DIR" >/dev/null 2>&1; then
             bad "macOS is blocking Terminal from reading this folder."
@@ -146,35 +140,8 @@ main() {
         return 1
     fi
 
-    # ── Xcode Command Line Tools (compiler for one component) ──
-    if (( need_clt )); then
-        rule
-        say "One-time step: Apple's free 'Command Line Developer Tools' are needed."
-        say "A macOS window will pop up — click 'Install' and let it finish"
-        say "(it may take 5–30 minutes; the window can hide BEHIND this one)."
-        xcode-select --install >/dev/null 2>&1
-        local waited=0
-        while ! pkgutil --pkg-info=com.apple.pkg.CLTools_Executables >/dev/null 2>&1; do
-            sleep 15; (( waited += 15 ))
-            if (( waited == 180 )); then
-                say "  Still waiting… If NO install window appeared (or it said"
-                say "  'not available from the Software Update server'), install"
-                say "  manually: https://developer.apple.com/download/all/ →"
-                say "  'Command Line Tools for Xcode', then run me again."
-            elif (( waited % 60 == 0 )); then
-                say "  Still waiting for the tools install (${waited}s)…"
-                say "  (Clicked Cancel by accident? Close this window and double-click me again.)"
-            fi
-            if (( waited >= 1800 )); then
-                say "  This is taking very long — that can be normal on slow Wi-Fi."
-                say "  Let the Apple install window finish, then double-click me again."
-                return 1
-            fi
-        done
-        ok "Command Line Tools installed"
-    else
-        ok "Command Line Tools already installed"
-    fi
+    # (No Xcode / Command Line Tools step: nothing compiles and nothing needs
+    #  git — the two non-PyPI dependencies ship as prebuilt wheels in wheels/.)
 
     # ── find conda (never trusts PATH — also survives 'reopen Terminal' misses) ──
     rule

@@ -32,7 +32,13 @@ dependencies:
       - demucs==4.0.1
       - essentia-tensorflow==2.1b6.dev1389
       - pytest==8.4.2
-      # madmom: PyPI release is stale — install from GitHub, pinned to a commit
-      - madmom @ git+https://github.com/CPJKU/madmom@27f032e8947204902c675e5e341a3faf5dc86dae
-      # BEAT THIS! beat tracker (ISMIR 2024) — not on PyPI, pinned to release tag
-      - beat_this @ git+https://github.com/CPJKU/beat_this@v1.1.0
+      # madmom: installed from the prebuilt wheel bundled in wheels/ so that
+      # NOTHING compiles on the user's machine (novice installs kept failing
+      # at the C build). Built from CPJKU/madmom@27f032e against numpy 2.4 —
+      # provenance, sha256 and rebuild instructions: wheels/README.md.
+      # (Linux: no bundled wheel — see wheels/README.md for the one-liner.)
+      - ./wheels/madmom-0.17.dev0-cp311-cp311-macosx_11_0_arm64.whl
+      # BEAT THIS! beat tracker (ISMIR 2024) — not on PyPI. Bundled as a wheel
+      # (pure Python, built from tag v1.1.0) so the install needs NO git —
+      # git only exists on fresh Macs via the Xcode tools we no longer require.
+      - ./wheels/beat_this-1.1.0-py3-none-any.whl

@@ -2,7 +2,7 @@
 
 This guide assumes you have **never used a terminal, Python, or git**. You will
 click through four steps; the installer does everything else and checks its own
-work. Total time: **20–40 minutes** (mostly waiting).
+work. Total time: **10–20 minutes** (mostly waiting).
 
 ## Before you start — will it run on your Mac?
 
@@ -12,7 +12,7 @@ Click the ** menu (top-left) → About This Mac** and check:
 |---|---|
 | An Apple Silicon chip (M1, M2, M3, M4 …) | "Chip: Apple M…" — 2021 or newer Macs. *Intel Macs are not supported.* |
 | macOS 15 (Sequoia) or newer | "macOS 15…" or higher (update via System Settings → General → Software Update) |
-| ~10 GB free space, internet, and your Mac password | — |
+| ~6 GB free space, internet, and your Mac password | — |
 
 ---
 
@@ -50,12 +50,10 @@ You only do this unblock dance **once per `.command` file**.
 
 ## Step 4 — Wait for the checkmark
 
-The installer window prints what it is doing. Twice it may need you:
+The installer window prints what it is doing. While it runs:
 
-- A macOS popup asking to install **"Command Line Developer Tools"** → click
-  **Install** (the popup may hide *behind* the Terminal window).
-- Otherwise: keep the laptop **open and plugged in**. A long wall of scrolling
-  text for 5–15 minutes is **normal**.
+- Keep the laptop **open and plugged in**. A long wall of scrolling text for
+  5–15 minutes is **normal**.
 - The installer accepts conda's standard Terms of Service
   ([anaconda.com/legal](https://anaconda.com/legal)) — conda requires this for
   automated installs, and it tells you so on screen.
@@ -103,6 +101,7 @@ python run_tests.py           # should finish with "… passed" and no failures
 python -m easymir /path/to/audio/
 ```
 
-Requirements: conda, git, Xcode command-line tools (`xcode-select --install`).
+Requirements: conda and git. Nothing compiles — the two non-PyPI dependencies
+install from prebuilt wheels in `wheels/` (see `wheels/README.md`).
 See README.md for the full feature documentation.
 </details>

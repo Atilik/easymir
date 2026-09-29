@@ -27,8 +27,9 @@ Intel Macs are not supported. Linux is expected to work but is untested — for
 audio playback, install PortAudio (`sudo apt install libportaudio2`). Windows
 is not supported natively (use WSL2).
 
-**Quickstart for terminal users** (needs [conda](https://docs.conda.io/en/latest/miniconda.html),
-git, and the Xcode command-line tools — `xcode-select --install`):
+**Quickstart for terminal users** (needs [conda](https://docs.conda.io/en/latest/miniconda.html)
+and git; nothing compiles — the two non-PyPI dependencies ship as prebuilt
+wheels in `wheels/`):
 
 ```bash
 git clone https://github.com/Atilik/easymir.git

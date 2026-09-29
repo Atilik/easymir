@@ -80,6 +80,25 @@ def test_runner_has_required_safeguards():
     assert "caffeinate" in s
 
 
+def test_env_yml_is_compile_free_and_git_free():
+    # Regression: madmom compiled on user machines (failed on a fresh macOS 26:
+    # SDK/linker mismatch), and git-URL deps need git, which fresh Macs lack.
+    # Both now ship as bundled wheels.
+    yml = _read("environment.yml")
+    assert "git+" not in yml, "a git dependency crept back into environment.yml"
+    for wheel in ("wheels/madmom-0.17.dev0-cp311-cp311-macosx_11_0_arm64.whl",
+                  "wheels/beat_this-1.1.0-py3-none-any.whl"):
+        assert f"./{wheel}" in yml, f"environment.yml no longer installs {wheel}"
+        assert os.path.isfile(os.path.join(REPO, wheel)), f"{wheel} missing from repo"
+
+
+def test_installer_has_no_compiler_steps():
+    s = _read("install.command")
+    for forbidden in ("xcode-select", "pkgutil", "xcrun"):
+        assert forbidden not in s, \
+            f"install.command references {forbidden} — the compiler-free design regressed"
+
+
 def test_installation_md_mentions_the_moving_parts():
     s = _read("INSTALLATION.md")
     for needle in ("install.command", "run_easymir.command", "install_log.txt",
