@@ -11,7 +11,7 @@ import zipfile
 import pytest
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-COMMANDS = ["install.command", "run_easymir.command"]
+COMMANDS = ["install.command", "run_easymir.command", "analyze_folder.command"]
 
 
 @pytest.mark.parametrize("name", COMMANDS)
@@ -97,6 +97,22 @@ def test_installer_has_no_compiler_steps():
     for forbidden in ("xcode-select", "pkgutil", "xcrun"):
         assert forbidden not in s, \
             f"install.command references {forbidden} — the compiler-free design regressed"
+
+
+def test_analyzer_has_required_safeguards():
+    s = _read("analyze_folder.command")
+    assert "process_and_save" in s              # the whole point
+    assert 'builtins.input = lambda' in s       # zero-questions batch mode
+    assert "caffeinate" in s
+    assert "analyze_log.txt" in s               # emailable failure log
+    assert "install.command" in s               # points novices to the installer
+
+
+def test_how_to_run_md_mentions_both_commands():
+    s = _read("how_to_run.md")
+    for needle in ("analyze_folder.command", "run_easymir.command",
+                   "Analysis_", "INSTALLATION.md"):
+        assert needle in s, f"how_to_run.md no longer mentions: {needle}"
 
 
 def test_installation_md_mentions_the_moving_parts():

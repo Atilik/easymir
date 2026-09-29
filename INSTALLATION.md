@@ -68,11 +68,14 @@ You are done when it prints:
 
 ## Using easymir (every day)
 
-1. Open the `easymir-main` folder and double-click **`run_easymir.command`**
-   (same one-time unblock as Step 3).
-2. **Drag the folder containing your audio files into the window**, press Return.
-3. When it finishes, your results are a CSV file inside an **`Analysis_…`**
-   folder in `easymir-main`.
+Two buttons, described in [how_to_run.md](how_to_run.md):
+
+- **`analyze_folder.command`** — analyze everything automatically → CSV.
+- **`run_easymir.command`** — explore interactively.
+
+Both: double-click (same one-time unblock as Step 3), **drag your audio folder
+into the window**, press Return. Results land in an **`Analysis_…`** folder in
+`easymir-main`.
 
 ## If anything goes wrong
 
