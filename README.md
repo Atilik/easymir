@@ -16,49 +16,34 @@ A simple, interactive command-line Python tool for music information retrieval (
 
 ## 🛠️ How to Setup easymir
 
-**Supported platforms:** macOS (tested). Linux is expected to work but is not yet
-tested — for audio playback, install the PortAudio system library
-(`sudo apt install libportaudio2`). Windows is not supported natively (use WSL2).
+> ### 🖱️ Never used a terminal? Start here → **[INSTALLATION.md](INSTALLATION.md)**
+> A click-through guide that assumes zero experience: install one program,
+> download the ZIP, double-click `install.command`, and wait for the ✓.
+> Afterwards, analyze music by double-clicking `run_easymir.command` and
+> dragging your audio folder in.
 
-Requirements: [conda](https://docs.conda.io/en/latest/miniconda.html), git, and
-(macOS only) the Xcode command-line tools — install with `xcode-select --install` —
-because one dependency (madmom) is compiled from source.
+**Supported platforms:** Apple Silicon Macs (M1 or newer) on macOS 15+.
+Intel Macs are not supported. Linux is expected to work but is untested — for
+audio playback, install PortAudio (`sudo apt install libportaudio2`). Windows
+is not supported natively (use WSL2).
 
-**Installed easymir before?** Start fresh — `conda env create` will not overwrite an
-existing environment:
-
-```bash
-conda deactivate
-conda env remove -n easymir
-# then re-clone (step 1 below), or run `git pull` inside your existing easymir folder
-```
+**Quickstart for terminal users** (needs [conda](https://docs.conda.io/en/latest/miniconda.html),
+git, and the Xcode command-line tools — `xcode-select --install`):
 
 ```bash
-# 1. Clone the repo
 git clone https://github.com/Atilik/easymir.git
 cd easymir
-
-# 2. Create the conda environment (installs everything; takes a few minutes)
 conda env create -f environment.yml
-
-# 3. Activate it
 conda activate easymir
-
-# 4. Download the classifier models (~45 MB — enables genre/mood/pitch features)
-python download_models.py
-
-# 5. Verify the install — should finish with no failures (e.g. "154 passed, 3 skipped")
-python run_tests.py
-
-# 6. Run easymir
+python download_models.py     # optional: enables genre/mood/pitch features
+python run_tests.py           # should finish with "… passed" and no failures
 python -m easymir /path/to/audio/
 ```
 
 **Notes**
-- Run all commands from the repo folder (the one containing this `README.md`).
-- Step 4 is optional: without the models everything works except genre, mood,
-  voice/instrumental, and CREPE pitch (the test suite then reports a few skips
-  instead of failures). Re-running the script is safe — it skips existing files.
+- Reinstalling? `conda env remove -n easymir` first — `conda env create` won't
+  overwrite an existing environment. Or simply double-click `install.command`,
+  which handles repairs automatically.
 - On first analysis run, the beat tracker (BEAT THIS!) and Demucs download
   their own checkpoints automatically (~100 MB, one time) — so the first song
   takes longer and needs an internet connection.

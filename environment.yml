@@ -1,7 +1,11 @@
 name: easymir
 channels:
+  # conda-forge ONLY. The Anaconda 'defaults' channels are deliberately
+  # excluded (nodefaults): since 2025 they require interactive Terms-of-
+  # Service acceptance, which silently breaks non-interactive installs
+  # on a fresh Miniconda (CondaToSNonInteractiveError).
   - conda-forge
-  - defaults
+  - nodefaults
 dependencies:
   # ── Interpreter + build/system stack (conda) ──
   - python=3.11

@@ -19,3 +19,8 @@ easymir/Analysis_*/
 
 # Downloaded Essentia models (fetch with: python download_models.py)
 easymir/models/
+
+# Installer artifacts (install.command / run_easymir.command)
+install_log.txt
+.easymir_installed
+.easymir_install.lock/
