@@ -1,6 +1,6 @@
-# easymir: Music Analysis Toolbox
+# mireasy: Music Analysis Toolbox
 
-A simple, interactive command-line Python tool for music information retrieval (MIR). `easymir` provides an intuitive interactive shell to load, analyze, and visualize audio files—either individually, by session (folder of songs), or by participant (folder of sessions).
+A simple, interactive command-line Python tool for music information retrieval (MIR). `mireasy` provides an intuitive interactive shell to load, analyze, and visualize audio files—either individually, by session (folder of songs), or by participant (folder of sessions).
 
 ## Features
 
@@ -14,12 +14,12 @@ A simple, interactive command-line Python tool for music information retrieval (
 
 ---
 
-## 🛠️ How to Setup easymir
+## 🛠️ How to Setup mireasy
 
 > ### 🖱️ Never used a terminal? Start here → **[INSTALLATION.md](INSTALLATION.md)**
 > A click-through guide that assumes zero experience: install one program,
 > download the ZIP, double-click `install.command`, and wait for the ✓.
-> Afterwards, analyze music by double-clicking `run_easymir.command` and
+> Afterwards, analyze music by double-clicking `run_mireasy.command` and
 > dragging your audio folder in.
 
 **Supported platforms:** Apple Silicon Macs (M1 or newer) on macOS 15+.
@@ -32,17 +32,17 @@ and git; nothing compiles — the two non-PyPI dependencies ship as prebuilt
 wheels in `wheels/`):
 
 ```bash
-git clone https://github.com/Atilik/easymir.git
-cd easymir
+git clone https://github.com/Atilik/mireasy.git
+cd mireasy
 conda env create -f environment.yml
-conda activate easymir
+conda activate mireasy
 python download_models.py     # optional: enables genre/mood/pitch features
 python run_tests.py           # should finish with "… passed" and no failures
-python -m easymir /path/to/audio/
+python -m mireasy /path/to/audio/
 ```
 
 **Notes**
-- Reinstalling? `conda env remove -n easymir` first — `conda env create` won't
+- Reinstalling? `conda env remove -n mireasy` first — `conda env create` won't
   overwrite an existing environment. Or simply double-click `install.command`,
   which handles repairs automatically.
 - On first analysis run, the beat tracker (BEAT THIS!) and Demucs download
@@ -58,40 +58,40 @@ this `README.md`). Then launch the tool with the path to an audio file, a sessio
 or a participant folder:
 
 ```bash
-conda activate easymir
-cd /path/to/easymir           # the repo folder
+conda activate mireasy
+cd /path/to/mireasy           # the repo folder
 
 # Load a single song:
-python -m easymir /path/to/song.wav
+python -m mireasy /path/to/song.wav
 
 # Load a session (folder of audio files):
-python -m easymir /path/to/session_folder/
+python -m mireasy /path/to/session_folder/
 
 # Load a participant (folder containing session folders):
-python -m easymir /path/to/participant_folder/
+python -m mireasy /path/to/participant_folder/
 ```
 
 This drops you into an interactive Python shell pre-loaded with your data. Leave it with `exit()` or Ctrl-D.
 
-Prefer scripts or notebooks? See [DOCUMENTATION.md](DOCUMENTATION.md) — `from easymir import Stimulus, Session, Participant`.
+Prefer scripts or notebooks? See [DOCUMENTATION.md](DOCUMENTATION.md) — `from mireasy import Stimulus, Session, Participant`.
 
 ---
 
 ## 📖 The Hierarchy
 
-`easymir` structures your data into three levels depending on the folder you pass:
+`mireasy` structures your data into three levels depending on the folder you pass:
 
 1. **Participant**: A folder containing multiple *Session* folders.
 2. **Session**: A folder containing multiple *Stimulus* audio files.
 3. **Stimulus**: A single audio file (e.g., a `.wav` or `.mp3`).
 
-When you load a folder, `easymir` automatically gives you variables (`participant`, `session`, `stimulus`) to interact with your data immediately.
+When you load a folder, `mireasy` automatically gives you variables (`participant`, `session`, `stimulus`) to interact with your data immediately.
 
 ---
 
 ## 💻 Using the Interactive Shell
 
-Type the following commands directly into the terminal once `easymir` is launched:
+Type the following commands directly into the terminal once `mireasy` is launched:
 
 ### Navigating Data
 - `participant(1)` — Focus on the 1st session. Updates the `session` and `stimulus` variables.
@@ -114,7 +114,7 @@ Type the following commands directly into the terminal once `easymir` is launche
 - `session.boxplot()` — Boxplots of BPM, LUFS, and syncopation across the session.
 
 ### Getting Metrics
-Access properties on-the-fly. If a metric hasn't been computed yet, `easymir` computes it on first access (model-based metrics take a few seconds).
+Access properties on-the-fly. If a metric hasn't been computed yet, `mireasy` computes it on first access (model-based metrics take a few seconds).
 ```python
 >>> stimulus.bpm
 120.5
@@ -136,7 +136,7 @@ Access properties on-the-fly. If a metric hasn't been computed yet, `easymir` co
 - `stimulus.partial_process_save(rhythm=True, pitch=True)`
   Computes only the selected feature groups (`rhythm`, `syncopation`, `genre`, `pitch`, `key`, `spectral`) instead of everything. `rhythm` is beats/BPM only (fast); `syncopation` runs Demucs separation + scoring (slow). Available on `session` and `participant` too.
 
-Results are written to `output_folder/Analysis_DD-MM-YYYY/easymir_HH-MM-SS.csv` (the exact path is printed after saving).
+Results are written to `output_folder/Analysis_DD-MM-YYYY/mireasy_HH-MM-SS.csv` (the exact path is printed after saving).
 
 ### Aggregate Metrics
 - `session.average_fluctuation` / `session.average_irregularity` — Mean fluctuation / spectral irregularity across the session's songs.
@@ -147,7 +147,7 @@ Results are written to `output_folder/Analysis_DD-MM-YYYY/easymir_HH-MM-SS.csv` 
 ## 🛠 Advanced Features
 
 ### Separation & Syncopation
-Syncopation requires isolating the drums with Demucs. The first time you ask for a syncopation score, `easymir` asks for confirmation (`Proceed? [Y/n]`) — on a CPU, separation takes roughly as long as the song itself.
+Syncopation requires isolating the drums with Demucs. The first time you ask for a syncopation score, `mireasy` asks for confirmation (`Proceed? [Y/n]`) — on a CPU, separation takes roughly as long as the song itself.
 ```python
 >>> stimulus.syncopation_score()
 ```
@@ -169,9 +169,9 @@ python run_tests.py
 
 # Also run the slow model tests (madmom beat detection, Demucs separation
 # if the htdemucs checkpoint is already cached)
-EASYMIR_RUN_SLOW=1 python run_tests.py
+MIREASY_RUN_SLOW=1 python run_tests.py
 ```
 
-Tests that need the Essentia classifier models (`easymir/models/*.pb`)
+Tests that need the Essentia classifier models (`mireasy/models/*.pb`)
 skip automatically while those files are absent — run `python download_models.py`
 to activate them.

@@ -8,7 +8,7 @@ import subprocess
 
 # NOTE: no pyplot, no matplotlib.use() here. All figures are built directly
 # as matplotlib.figure.Figure and embedded via FigureCanvasTkAgg, so importing
-# easymir never touches the user's matplotlib backend (e.g. notebook inline).
+# mireasy never touches the user's matplotlib backend (e.g. notebook inline).
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 from matplotlib.ticker import ScalarFormatter

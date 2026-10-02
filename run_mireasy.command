@@ -1,13 +1,13 @@
 #!/bin/zsh
 # ─────────────────────────────────────────────────────────────────────────────
-#  easymir — double-click me, then drag your audio folder into this window.
+#  mireasy — double-click me, then drag your audio folder into this window.
 #  (Run install.command first if you haven't.)
 # ─────────────────────────────────────────────────────────────────────────────
 
 SCRIPT_DIR="${0:A:h}"
 cd "$SCRIPT_DIR" 2>/dev/null
-ENV_NAME="easymir"
-MARKER="$SCRIPT_DIR/.easymir_installed"
+ENV_NAME="mireasy"
+MARKER="$SCRIPT_DIR/.mireasy_installed"
 
 pause_and_exit() {
     print
@@ -17,7 +17,7 @@ pause_and_exit() {
     exit $1
 }
 
-# ── find the easymir environment directly (immune to PATH / dual-conda) ──
+# ── find the mireasy environment directly (immune to PATH / dual-conda) ──
 ENV_PY=""
 for cand in "$HOME/miniconda3" "$HOME/anaconda3" "$HOME/opt/miniconda3" \
             "$HOME/opt/anaconda3" /opt/miniconda3 /opt/anaconda3 \
@@ -29,14 +29,14 @@ for cand in "$HOME/miniconda3" "$HOME/anaconda3" "$HOME/opt/miniconda3" \
 done
 
 if [[ -z "$ENV_PY" || ! -f "$MARKER" ]]; then
-    print "easymir is not installed yet (or the installation didn't finish)."
+    print "mireasy is not installed yet (or the installation didn't finish)."
     print "Please double-click  install.command  in this folder first."
     pause_and_exit 1
 fi
 
 # ── ask for the folder (drag & drop friendly) ──
 print "──────────────────────────────────────────────────────────"
-print " easymir"
+print " mireasy"
 print "──────────────────────────────────────────────────────────"
 print ""
 print " Drag the FOLDER with your audio files into this window,"
@@ -67,7 +67,7 @@ print " Results (CSV files) will be saved in an Analysis_… folder inside:"
 print "   $SCRIPT_DIR"
 print "──────────────────────────────────────────────────────────"
 
-caffeinate -i "$ENV_PY" -m easymir "$target"
+caffeinate -i "$ENV_PY" -m mireasy "$target"
 rc=$?
 
 print "──────────────────────────────────────────────────────────"
@@ -75,6 +75,6 @@ if (( rc == 0 )); then
     print " Done. Your results are in the Analysis_… folder inside:"
     print "   $SCRIPT_DIR"
 else
-    print " easymir reported a problem (see the messages above)."
+    print " mireasy reported a problem (see the messages above)."
 fi
 pause_and_exit $rc

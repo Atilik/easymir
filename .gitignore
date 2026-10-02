@@ -15,13 +15,13 @@ downloaded_session_music/
 
 # Analysis output (default: written to the current working directory)
 Analysis_*/
-easymir/Analysis_*/
+mireasy/Analysis_*/
 
 # Downloaded Essentia models (fetch with: python download_models.py)
-easymir/models/
+mireasy/models/
 
 # Installer / runner artifacts (.command scripts)
 install_log.txt
 analyze_log.txt
-.easymir_installed
-.easymir_install.lock/
+.mireasy_installed
+.mireasy_install.lock/

@@ -1,4 +1,4 @@
-name: easymir
+name: mireasy
 channels:
   # conda-forge ONLY. The Anaconda 'defaults' channels are deliberately
   # excluded (nodefaults): since 2025 they require interactive Terms-of-

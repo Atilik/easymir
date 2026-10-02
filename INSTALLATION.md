@@ -1,4 +1,4 @@
-# Installing easymir — no experience needed
+# Installing mireasy — no experience needed
 
 This guide assumes you have **never used a terminal, Python, or git**. You will
 click through four steps; the installer does everything else and checks its own
@@ -22,16 +22,16 @@ Click the ** menu (top-left) → About This Mac** and check:
 2. Double-click the downloaded file and click **Continue / Agree / Install**
    through all the screens (the standard choices are fine).
 
-## Step 2 — Download easymir
+## Step 2 — Download mireasy
 
-1. On the easymir GitHub page, click the green **`<> Code`** button → **Download ZIP**.
+1. On the mireasy GitHub page, click the green **`<> Code`** button → **Download ZIP**.
 2. In your **Downloads** folder, double-click the ZIP. A folder named
-   **`easymir-main`** appears — that folder is easymir.
-   *(Re-downloading later? Delete the old `easymir-main` folder first.)*
+   **`mireasy-main`** appears — that folder is mireasy.
+   *(Re-downloading later? Delete the old `mireasy-main` folder first.)*
 
 ## Step 3 — Run the installer
 
-Open the `easymir-main` folder and **double-click `install.command`**.
+Open the `mireasy-main` folder and **double-click `install.command`**.
 
 > **macOS will block it the first time — this is expected.** The installer is a
 > university research script, not an App Store app, so macOS shows:
@@ -61,26 +61,26 @@ The installer window prints what it is doing. While it runs:
 You are done when it prints:
 
 ```
-✓✓✓  easymir is ready!  ✓✓✓
+✓✓✓  mireasy is ready!  ✓✓✓
 ```
 
 ---
 
-## Using easymir (every day)
+## Using mireasy (every day)
 
 Two buttons, described in [HOW_TO_RUN.md](HOW_TO_RUN.md):
 
 - **`analyze_folder.command`** — analyze everything automatically → CSV.
-- **`run_easymir.command`** — explore interactively.
+- **`run_mireasy.command`** — explore interactively.
 
 Both: double-click (same one-time unblock as Step 3), **drag your audio folder
 into the window**, press Return. Results land in an **`Analysis_…`** folder in
-`easymir-main`.
+`mireasy-main`.
 
 ## If anything goes wrong
 
-Every run writes a file called **`install_log.txt`** inside `easymir-main`.
-Open a new email to the easymir author, **drag `install_log.txt` into the
+Every run writes a file called **`install_log.txt`** inside `mireasy-main`.
+Open a new email to the mireasy author, **drag `install_log.txt` into the
 email**, and send — it contains everything needed to help you. You can always
 safely re-run `install.command`; it never breaks an existing installation.
 
@@ -95,13 +95,13 @@ window**, and press Return. This always works.
 <summary><b>Appendix — manual installation (for terminal users)</b></summary>
 
 ```bash
-git clone https://github.com/Atilik/easymir.git
-cd easymir
+git clone https://github.com/Atilik/mireasy.git
+cd mireasy
 conda env create -f environment.yml
-conda activate easymir
+conda activate mireasy
 python download_models.py     # optional: enables genre/mood/pitch features
 python run_tests.py           # should finish with "… passed" and no failures
-python -m easymir /path/to/audio/
+python -m mireasy /path/to/audio/
 ```
 
 Requirements: conda and git. Nothing compiles — the two non-PyPI dependencies

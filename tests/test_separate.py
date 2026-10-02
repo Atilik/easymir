@@ -1,7 +1,7 @@
-"""Tests for easymir/separate.py.
+"""Tests for mireasy/separate.py.
 
 Default tests exercise the fast paths: input validation and audio loading
-(no model). The real Demucs separation runs only with EASYMIR_RUN_SLOW=1 AND
+(no model). The real Demucs separation runs only with MIREASY_RUN_SLOW=1 AND
 a cached model checkpoint.
 """
 import glob
@@ -15,13 +15,13 @@ import numpy as np
 import pytest
 import soundfile as sf
 
-from easymir.separate import separate, _load_audio
+from mireasy.separate import separate, _load_audio
 from conftest import make_clicks, RUN_SLOW
 
 SLOW = pytest.mark.skipif(
     not (RUN_SLOW and glob.glob(os.path.join(
         os.path.expanduser("~"), ".cache", "torch", "hub", "checkpoints", "*.th"))),
-    reason="set EASYMIR_RUN_SLOW=1 (and have htdemucs cached) to run Demucs",
+    reason="set MIREASY_RUN_SLOW=1 (and have htdemucs cached) to run Demucs",
 )
 
 

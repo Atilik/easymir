@@ -1,11 +1,11 @@
 """
-Download the Essentia classifier models that power easymir's genre, mood,
+Download the Essentia classifier models that power mireasy's genre, mood,
 voice/instrumental, and CREPE pitch features (~45 MB total).
 
 Usage:
     python download_models.py
 
-Files are saved to easymir/models/. Already-downloaded files are skipped,
+Files are saved to mireasy/models/. Already-downloaded files are skipped,
 so re-running is always safe. Uses only the Python standard library.
 """
 import os
@@ -14,7 +14,7 @@ import urllib.request
 
 BASE = "https://essentia.upf.edu/models"
 MODELS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                          "easymir", "models")
+                          "mireasy", "models")
 
 # (url path under BASE, local filename)
 FILES = [

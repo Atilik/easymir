@@ -1,5 +1,5 @@
 """Guards for the double-click installer assets (install.command,
-run_easymir.command, INSTALLATION.md). All offline and fast.
+run_mireasy.command, INSTALLATION.md). All offline and fast.
 
 The GitHub Download-ZIP is simulated with `git archive` — if the exec bits are
 missing INSIDE the archive, a downloaded installer won't be double-clickable.
@@ -11,7 +11,7 @@ import zipfile
 import pytest
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-COMMANDS = ["install.command", "run_easymir.command", "analyze_folder.command"]
+COMMANDS = ["install.command", "run_mireasy.command", "analyze_folder.command"]
 
 
 @pytest.mark.parametrize("name", COMMANDS)
@@ -72,8 +72,8 @@ def test_installer_has_required_safeguards():
 
 
 def test_runner_has_required_safeguards():
-    s = _read("run_easymir.command")
-    assert "envs/easymir/bin/python" in s.replace('"$ENV_NAME"', "easymir") \
+    s = _read("run_mireasy.command")
+    assert "envs/mireasy/bin/python" in s.replace('"$ENV_NAME"', "mireasy") \
         or "$ENV_NAME/bin/python" in s          # env resolved directly
     assert "install.command" in s               # points novices to the installer
     assert "Press Return to close" in s
@@ -110,15 +110,15 @@ def test_analyzer_has_required_safeguards():
 
 def test_how_to_run_md_mentions_both_commands():
     s = _read("HOW_TO_RUN.md")
-    for needle in ("analyze_folder.command", "run_easymir.command",
+    for needle in ("analyze_folder.command", "run_mireasy.command",
                    "Analysis_", "INSTALLATION.md"):
         assert needle in s, f"HOW_TO_RUN.md no longer mentions: {needle}"
 
 
 def test_installation_md_mentions_the_moving_parts():
     s = _read("INSTALLATION.md")
-    for needle in ("install.command", "run_easymir.command", "install_log.txt",
-                   "Open Anyway", "Move to Trash", "easymir-main",
+    for needle in ("install.command", "run_mireasy.command", "install_log.txt",
+                   "Open Anyway", "Move to Trash", "mireasy-main",
                    "Apple Silicon", "macOS 15"):
         assert needle in s, f"INSTALLATION.md no longer mentions: {needle}"
 

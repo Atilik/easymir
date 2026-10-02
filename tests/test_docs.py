@@ -8,8 +8,8 @@ import re
 
 import pytest
 
-from easymir.easymir import Stimulus, Session, Participant
-from easymir.core import stimulus_help, session_help, participant_help
+from mireasy.mireasy import Stimulus, Session, Participant
+from mireasy.core import stimulus_help, session_help, participant_help
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 

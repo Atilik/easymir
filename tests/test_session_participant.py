@@ -1,4 +1,4 @@
-"""Tests for Session, Participant, and the easymir() entry point."""
+"""Tests for Session, Participant, and the mireasy() entry point."""
 import csv
 import os
 import shutil
@@ -6,8 +6,8 @@ import shutil
 import numpy as np
 import pytest
 
-from easymir.easymir import (
-    Stimulus, Session, Participant, easymir, _folder_has_subdirs,
+from mireasy.mireasy import (
+    Stimulus, Session, Participant, mireasy, _folder_has_subdirs,
 )
 
 
@@ -219,7 +219,7 @@ def test_hidden_subfolder_does_not_make_participant(tmp_path, sine_wav, junk):
     # loaded as a participant, and its songs were ignored
     shutil.copy(sine_wav, tmp_path / "song.wav")
     (tmp_path / junk).mkdir()
-    obj = easymir(str(tmp_path))
+    obj = mireasy(str(tmp_path))
     assert isinstance(obj, Session) and len(obj) == 1
 
 
@@ -376,36 +376,36 @@ def test_participant_repr(participant_folder):
     assert "sessions=2" in repr(Participant(participant_folder))
 
 
-# ── easymir() entry point ──────────────────────────────────
+# ── mireasy() entry point ──────────────────────────────────
 
-def test_easymir_file_returns_stimulus(sine_wav):
-    assert isinstance(easymir(sine_wav), Stimulus)
+def test_mireasy_file_returns_stimulus(sine_wav):
+    assert isinstance(mireasy(sine_wav), Stimulus)
 
 
-def test_easymir_bad_extension_raises(tmp_path):
+def test_mireasy_bad_extension_raises(tmp_path):
     bad = tmp_path / "doc.txt"
     bad.write_text("hi")
     with pytest.raises(ValueError):
-        easymir(str(bad))
+        mireasy(str(bad))
 
 
-def test_easymir_flat_folder_returns_session(session_folder):
-    assert isinstance(easymir(session_folder), Session)
+def test_mireasy_flat_folder_returns_session(session_folder):
+    assert isinstance(mireasy(session_folder), Session)
 
 
-def test_easymir_nested_folder_returns_participant(participant_folder):
-    assert isinstance(easymir(participant_folder), Participant)
+def test_mireasy_nested_folder_returns_participant(participant_folder):
+    assert isinstance(mireasy(participant_folder), Participant)
 
 
-def test_easymir_missing_path_raises():
+def test_mireasy_missing_path_raises():
     with pytest.raises(FileNotFoundError):
-        easymir("/no/such/path")
+        mireasy("/no/such/path")
 
 
-def test_easymir_mixed_folder_warns(participant_folder, sine_wav, capsys):
+def test_mireasy_mixed_folder_warns(participant_folder, sine_wav, capsys):
     # Regression (#7): loose top-level audio must be called out
     shutil.copy(sine_wav, os.path.join(participant_folder, "loose.wav"))
-    obj = easymir(participant_folder)
+    obj = mireasy(participant_folder)
     out = capsys.readouterr().out
     assert isinstance(obj, Participant)
     assert "Ignoring 1 audio file(s)" in out

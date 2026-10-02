@@ -3,7 +3,7 @@ import pytest
 import numpy as np
 import soundfile as sf
 
-from easymir.easymir import Stimulus
+from mireasy.mireasy import Stimulus
 
 TEST_AUDIO = "tests/dummy_test_audio.wav"
 

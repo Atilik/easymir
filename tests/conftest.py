@@ -1,11 +1,11 @@
 """
-Shared fixtures for the easymir test suite.
+Shared fixtures for the mireasy test suite.
 
 All audio is synthetic (sine waves / click tracks) so tests are fast,
 deterministic, and need no external data or ML models.
 
 Heavy paths (Demucs, BEAT THIS!, Essentia classifiers) are gated behind
-EASYMIR_RUN_SLOW=1 and model-cache checks — see test_separate.py / test_genre.py.
+MIREASY_RUN_SLOW=1 and model-cache checks — see test_separate.py / test_genre.py.
 """
 import os
 import sys
@@ -15,12 +15,12 @@ import numpy as np
 import pytest
 import soundfile as sf
 
-# Make `import easymir.*` work no matter where pytest is invoked from
+# Make `import mireasy.*` work no matter where pytest is invoked from
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 SR = 44100
 
-RUN_SLOW = bool(os.environ.get("EASYMIR_RUN_SLOW"))
+RUN_SLOW = bool(os.environ.get("MIREASY_RUN_SLOW"))
 
 
 # ── Signal builders ─────────────────────────────────────────

@@ -1,24 +1,24 @@
 #!/bin/zsh
 # ─────────────────────────────────────────────────────────────────────────────
-#  easymir installer — double-click me in Finder.
+#  mireasy installer — double-click me in Finder.
 #
-#  Installs everything easymir needs on an Apple Silicon Mac (macOS 15+),
+#  Installs everything mireasy needs on an Apple Silicon Mac (macOS 15+),
 #  checks its own work, and writes everything it does to install_log.txt
 #  (same folder). Safe to run again at any time.
 #
-#  Stuck? Email install_log.txt to the easymir author.
+#  Stuck? Email install_log.txt to the mireasy author.
 # ─────────────────────────────────────────────────────────────────────────────
 
 SCRIPT_DIR="${0:A:h}"
 cd "$SCRIPT_DIR" 2>/dev/null
 LOG="$SCRIPT_DIR/install_log.txt"
-MARKER="$SCRIPT_DIR/.easymir_installed"
-LOCK="$SCRIPT_DIR/.easymir_install.lock"
-ENV_NAME="easymir"
+MARKER="$SCRIPT_DIR/.mireasy_installed"
+LOCK="$SCRIPT_DIR/.mireasy_install.lock"
+ENV_NAME="mireasy"
 MINICONDA_URL="https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-arm64.pkg"
 export CONDA_ALWAYS_YES="true"      # no hidden y/n prompt may stall the install
 # conda >= 25.7 refuses non-interactive runs until Anaconda's channel Terms of
-# Service are accepted — even when (like easymir) every package comes from the
+# Service are accepted — even when (like mireasy) every package comes from the
 # community conda-forge channel instead. This is Anaconda's own variable for
 # automated installs; the installer discloses it on screen before installing.
 export CONDA_PLUGINS_AUTO_ACCEPT_TOS="yes"
@@ -43,7 +43,7 @@ pause_and_exit() {
 # ── the whole install, logged via tee at the bottom ─────────────────────────
 main() {
     rule
-    say "easymir installer"
+    say "mireasy installer"
     rule
 
     # Diagnostics header — makes a single emailed log diagnosable
@@ -69,7 +69,7 @@ main() {
 
     # 1. Apple Silicon (Rosetta-aware)
     if [[ "$(sysctl -n hw.optional.arm64 2>/dev/null)" != "1" ]]; then
-        bad "This Mac has an Intel processor. easymir needs an Apple Silicon"
+        bad "This Mac has an Intel processor. mireasy needs an Apple Silicon"
         say "    Mac (M1 or newer, 2021+). Sorry — this machine can't run it."
         problems=1
     elif [[ "$(sysctl -n sysctl.proc_translated 2>/dev/null)" == "1" ]]; then
@@ -85,7 +85,7 @@ main() {
     local macver=$(sw_vers -productVersion)
     local macmajor=${macver%%.*}
     if (( macmajor < 15 )); then
-        bad "macOS $macver is too old — easymir needs macOS 15 (Sequoia) or newer."
+        bad "macOS $macver is too old — mireasy needs macOS 15 (Sequoia) or newer."
         say "     → Apple menu → System Settings → General → Software Update"
         problems=1
     else
@@ -97,14 +97,14 @@ main() {
     local need_gb=6
     local free_gb=$(df -g / | awk 'NR==2 {print $4}')
     if (( free_gb < need_gb )); then
-        bad "Only ${free_gb} GB free — easymir needs about ${need_gb} GB."
+        bad "Only ${free_gb} GB free — mireasy needs about ${need_gb} GB."
         say "    Free some space (empty the Trash, delete old downloads), run me again."
         problems=1
     else
         ok "${free_gb} GB free disk space"
     fi
 
-    # 4. This script must sit inside the easymir folder, and it must be readable
+    # 4. This script must sit inside the mireasy folder, and it must be readable
     if [[ ! -e "$SCRIPT_DIR/environment.yml" ]]; then
         if ! ls "$SCRIPT_DIR" >/dev/null 2>&1; then
             bad "macOS is blocking Terminal from reading this folder."
@@ -112,12 +112,12 @@ main() {
             say "    Terminal → allow the folder, then run me again."
         else
             bad "I can't find environment.yml next to me."
-            say "    Please keep install.command INSIDE the easymir folder you"
+            say "    Please keep install.command INSIDE the mireasy folder you"
             say "    unzipped (don't move it to the Desktop), then run it from there."
         fi
         problems=1
     else
-        ok "easymir folder looks complete"
+        ok "mireasy folder looks complete"
     fi
 
     # 6. Internet — the actual hosts we need (campus proxies surface here)
@@ -169,7 +169,7 @@ main() {
         return 0
     fi
     if [[ "$(file -b "$base/bin/python" 2>/dev/null)" != *arm64* ]]; then
-        bad "The Miniconda at $base is the Intel version — it can't install easymir."
+        bad "The Miniconda at $base is the Intel version — it can't install mireasy."
         say "    Please install the Apple Silicon version instead:"
         say "    $MINICONDA_URL"
         say "    then double-click me again."
@@ -182,16 +182,16 @@ main() {
     local CONDA_BIN="$base/bin/conda"
     local ENV_PY="$base/envs/$ENV_NAME/bin/python"
 
-    # ── the easymir environment (marker-gated, deterministic recreate) ──
+    # ── the mireasy environment (marker-gated, deterministic recreate) ──
     rule
-    if [[ -f "$MARKER" && -x "$ENV_PY" ]] && "$ENV_PY" -c "import easymir" >/dev/null 2>&1; then
-        ok "easymir is already installed — running a quick health check…"
+    if [[ -f "$MARKER" && -x "$ENV_PY" ]] && "$ENV_PY" -c "import mireasy" >/dev/null 2>&1; then
+        ok "mireasy is already installed — running a quick health check…"
     else
         if [[ -d "$base/envs/$ENV_NAME" ]]; then
             say "Found a previous incomplete installation — rebuilding it cleanly…"
             "$CONDA_BIN" env remove -n "$ENV_NAME" -y >/dev/null 2>&1
         fi
-        say "Installing the easymir environment. This downloads ~2 GB and takes"
+        say "Installing the mireasy environment. This downloads ~2 GB and takes"
         say "5–15 minutes. Lots of text will scroll by — that is NORMAL."
         say "Keep the laptop OPEN and PLUGGED IN. Don't close this window."
         say ""
@@ -208,7 +208,7 @@ main() {
                 rule
                 bad "The installation failed twice."
                 say "    Please email install_log.txt (in this folder) to the"
-                say "    easymir author — it contains everything needed to help you."
+                say "    mireasy author — it contains everything needed to help you."
                 return 1
             fi
         fi
@@ -235,7 +235,7 @@ main() {
     if ! caffeinate -i "$ENV_PY" run_tests.py -q; then
         rule
         bad "The self-check found a problem."
-        say "    Please email install_log.txt (in this folder) to the easymir"
+        say "    Please email install_log.txt (in this folder) to the mireasy"
         say "    author — it contains everything needed to help you."
         return 1
     fi
@@ -243,9 +243,9 @@ main() {
 
     rule
     say ""
-    say "  ✓✓✓  easymir is ready!  ✓✓✓"
+    say "  ✓✓✓  mireasy is ready!  ✓✓✓"
     say ""
-    say "  To analyze music: double-click  run_easymir.command  (in this"
+    say "  To analyze music: double-click  run_mireasy.command  (in this"
     say "  folder) and drag your audio folder into the window it opens."
     say ""
     rule

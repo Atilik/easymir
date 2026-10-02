@@ -1,6 +1,6 @@
 """Tests for download_models.py (repo root, not part of the package).
 
-Network tests — gated behind EASYMIR_RUN_SLOW=1 like the model tests, so the
+Network tests — gated behind MIREASY_RUN_SLOW=1 like the model tests, so the
 default suite stays offline-safe. Catches upstream URL rot at essentia.upf.edu
 before a fresh user does.
 """
@@ -18,7 +18,7 @@ from conftest import RUN_SLOW
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 NETWORK = pytest.mark.skipif(
-    not RUN_SLOW, reason="set EASYMIR_RUN_SLOW=1 to run network tests")
+    not RUN_SLOW, reason="set MIREASY_RUN_SLOW=1 to run network tests")
 
 
 def _load_script():
@@ -34,7 +34,7 @@ def test_script_lists_all_files_genre_expects():
     # in the download list (drift here = FileNotFoundError for fresh users)
     dm = _load_script()
     listed = {name for _, name in dm.FILES}
-    from easymir import genre
+    from mireasy import genre
     expected = {os.path.basename(genre._EFFNET_PATH),
                 os.path.basename(genre._CREPE_PATH)}
     for base in genre._HEAD_FILES.values():

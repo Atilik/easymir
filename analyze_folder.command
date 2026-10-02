@@ -1,6 +1,6 @@
 #!/bin/zsh
 # ─────────────────────────────────────────────────────────────────────────────
-#  easymir batch analysis — double-click me, drag your audio folder in, and
+#  mireasy batch analysis — double-click me, drag your audio folder in, and
 #  walk away. Every song is fully analyzed (tempo, syncopation, loudness,
 #  key, genre, mood, …) and saved as a CSV. No questions asked.
 #  (Run install.command first if you haven't.)
@@ -8,8 +8,8 @@
 
 SCRIPT_DIR="${0:A:h}"
 cd "$SCRIPT_DIR" 2>/dev/null
-ENV_NAME="easymir"
-MARKER="$SCRIPT_DIR/.easymir_installed"
+ENV_NAME="mireasy"
+MARKER="$SCRIPT_DIR/.mireasy_installed"
 LOG="$SCRIPT_DIR/analyze_log.txt"
 
 pause_and_exit() {
@@ -20,7 +20,7 @@ pause_and_exit() {
     exit $1
 }
 
-# ── find the easymir environment directly (immune to PATH / dual-conda) ──
+# ── find the mireasy environment directly (immune to PATH / dual-conda) ──
 ENV_PY=""
 for cand in "$HOME/miniconda3" "$HOME/anaconda3" "$HOME/opt/miniconda3" \
             "$HOME/opt/anaconda3" /opt/miniconda3 /opt/anaconda3 \
@@ -32,14 +32,14 @@ for cand in "$HOME/miniconda3" "$HOME/anaconda3" "$HOME/opt/miniconda3" \
 done
 
 if [[ -z "$ENV_PY" || ! -f "$MARKER" ]]; then
-    print "easymir is not installed yet (or the installation didn't finish)."
+    print "mireasy is not installed yet (or the installation didn't finish)."
     print "Please double-click  install.command  in this folder first."
     pause_and_exit 1
 fi
 
 # ── ask for the folder (drag & drop friendly) ──
 print "──────────────────────────────────────────────────────────"
-print " easymir — automatic batch analysis"
+print " mireasy — automatic batch analysis"
 print "──────────────────────────────────────────────────────────"
 print ""
 print " Drag the FOLDER with your audio files into this window,"
@@ -78,8 +78,8 @@ print "────────────────────────�
 PYCODE='
 import builtins, sys
 builtins.input = lambda *a: "y"          # auto-confirm (batch mode)
-from easymir.easymir import easymir
-obj = easymir(sys.argv[1])
+from mireasy.mireasy import mireasy
+obj = mireasy(sys.argv[1])
 obj.process_and_save(output_path=sys.argv[2])
 '
 caffeinate -i "$ENV_PY" -c "$PYCODE" "$target" "$SCRIPT_DIR" 2>&1 | tee "$LOG"
@@ -97,6 +97,6 @@ if (( rc == 0 )); then
 else
     print " ✗ Something went wrong (see the messages above)."
     print "   The full log is analyze_log.txt in this folder — you can"
-    print "   drag it into an email to the easymir author."
+    print "   drag it into an email to the mireasy author."
     pause_and_exit $rc
 fi
